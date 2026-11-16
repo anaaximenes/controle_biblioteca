@@ -1,0 +1,68 @@
+package com.poo.biblioteca;
+
+import java.time.LocalDate;
+
+public class Reserva {
+    private int id;
+    private Leitor leitor;
+    private Obra obra;
+    private LocalDate dataReserva;
+    private LocalDate dataExpiracao;
+    private StatusReserva status;
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public Leitor getLeitor() {
+        return leitor;
+    }
+
+    public void setLeitor(Leitor leitor) {
+        this.leitor = leitor;
+    }
+
+    public Obra getObra() {
+        return obra;
+    }
+
+    public void setObra(Obra obra) {
+        this.obra = obra;
+    }
+
+    public LocalDate getDataReserva() {
+        return dataReserva;
+    }
+
+    public void setDataReserva(LocalDate dataReserva) {
+        this.dataReserva = dataReserva;
+    }
+
+    public LocalDate getDataExpiracao() {
+        return dataExpiracao;
+    }
+
+    public void setDataExpiracao(LocalDate dataExpiracao) {
+        this.dataExpiracao = dataExpiracao;
+    }
+
+    public StatusReserva getStatus() {
+        return status;
+    }
+
+    public void setStatus(StatusReserva status) {
+        this.status = status;
+    }
+
+    public void cancelar(){
+        //todo
+    }
+
+    public void concluir(){
+        //todo
+    }
+}
