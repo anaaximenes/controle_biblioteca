@@ -10,6 +10,9 @@ public class Obra {
     private int anoPublicacao;
     private List<Copia> copias;
 
+    public Obra(){
+    }
+
     public Obra(int id, String titulo, String autor, String isbn, int anoPublicacao, List<Copia> copias) {
         this.id = id;
         this.titulo = titulo;
