@@ -1,23 +1,21 @@
 package com.poo.biblioteca;
 
-import com.sun.tools.javac.util.List;
+import java.util.List;
 
 public class Obra {
     private int id;
     private String titulo;
     private String autor;
-    private String isbn;
     private int anoPublicacao;
     private List<Copia> copias;
 
     public Obra(){
     }
 
-    public Obra(int id, String titulo, String autor, String isbn, int anoPublicacao, List<Copia> copias) {
+    public Obra(int id, String titulo, String autor, int anoPublicacao, List<Copia> copias) {
         this.id = id;
         this.titulo = titulo;
         this.autor = autor;
-        this.isbn = isbn;
         this.anoPublicacao = anoPublicacao;
         this.copias = copias;
     }
@@ -44,14 +42,6 @@ public class Obra {
 
     public void setAutor(String autor) {
         this.autor = autor;
-    }
-
-    public String getIsbn() {
-        return isbn;
-    }
-
-    public void setIsbn(String isbn) {
-        this.isbn = isbn;
     }
 
     public int getAnoPublicacao() {
