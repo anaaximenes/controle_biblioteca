@@ -1,6 +1,8 @@
 package com.poo.biblioteca.dao;
 
 import com.poo.biblioteca.Copia;
+import com.poo.biblioteca.Obra;
+import com.poo.biblioteca.StatusCopia;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -36,7 +38,7 @@ public class CopiaDAO {
         try (Connection conn = DriverManager.getConnection(URL);
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, c.getCodigoBarras());
-            pstmt.setString(2, c.getStatus());
+            pstmt.setString(2, c.getStatus().name());
             pstmt.setInt(3, c.getObra().getId());
 
             return pstmt.executeUpdate();
@@ -51,8 +53,9 @@ public class CopiaDAO {
         try (Connection conn = DriverManager.getConnection(URL);
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, c.getCodigoBarras());
-            pstmt.setString(2, c.getStatus());
+            pstmt.setString(2, c.getStatus().name());
             pstmt.setInt(3, c.getObra().getId());
+            pstmt.setInt(4, c.getId());
             return pstmt.executeUpdate();
         } catch (Exception e) {
             System.err.println("Erro ao alterar copia: " + e.getMessage());
@@ -82,7 +85,8 @@ public class CopiaDAO {
             if (rs.next()) {
                 c.setId(id);
                 c.setCodigoBarras(rs.getString("codigoBarras"));
-                c.setStatus(rs.getString("status"));
+                c.setStatus(StatusCopia.valueOf(rs.getString("status")));
+                c.setObra(new Obra());
                 c.getObra().setId(rs.getInt("obraId"));
             }
         } catch (Exception e) {

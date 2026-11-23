@@ -61,6 +61,7 @@ public class LeitorDAO {
             pstmt.setString(5, l.getMatricula());
             int ativoInt = l.isAtivo() ? 1 : 0;
             pstmt.setInt(6, ativoInt);
+            pstmt.setInt(7, l.getId());
             return pstmt.executeUpdate();
         } catch (Exception e) {
             System.err.println("Erro ao alterar leitor: " + e.getMessage());

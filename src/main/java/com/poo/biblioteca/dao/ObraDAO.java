@@ -52,6 +52,7 @@ public class ObraDAO {
             pstmt.setString(1, o.getTitulo());
             pstmt.setString(2, o.getAutor());
             pstmt.setInt(3, o.getAnoPublicacao());
+            pstmt.setInt(4, o.getId());
             return pstmt.executeUpdate();
         } catch (Exception e) {
             System.err.println("Erro ao alterar obra: " + e.getMessage());
