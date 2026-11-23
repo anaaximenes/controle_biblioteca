@@ -128,6 +128,10 @@ public class ObraPanel extends JPanel {
         add(splitPane, BorderLayout.CENTER);
     }
 
+    public void recarregarDados() {
+        carregarTabela();
+    }
+
     private void carregarTabela() {
         tableModel.setRowCount(0);
         try {

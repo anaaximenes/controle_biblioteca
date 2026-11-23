@@ -3,9 +3,14 @@ package com.poo.biblioteca.ui;
 import javax.swing.*;
 import javax.swing.border.*;
 import javax.swing.table.*;
+import javax.swing.text.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.RoundRectangle2D;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.time.format.ResolverStyle;
 
 import static com.poo.biblioteca.ui.UIConstants.*;
 
@@ -14,7 +19,197 @@ import static com.poo.biblioteca.ui.UIConstants.*;
  */
 public final class UIHelper {
 
+    public static final DateTimeFormatter DATA_BR_FORMATTER =
+            DateTimeFormatter.ofPattern("dd-MM-uuuu").withResolverStyle(ResolverStyle.STRICT);
+    private static final DateTimeFormatter DATA_BR_BARRA_FORMATTER =
+            DateTimeFormatter.ofPattern("dd/MM/uuuu").withResolverStyle(ResolverStyle.STRICT);
+
     private UIHelper() {}
+
+    // ── Formatação e Conversão de Datas (Padrão BR: dd-MM-yyyy) ──
+
+    public static String formatarDataBR(LocalDate data) {
+        if (data == null) {
+            return "-";
+        }
+        return data.format(DATA_BR_FORMATTER);
+    }
+
+    public static LocalDate parseDataBR(String texto) throws DateTimeParseException {
+        if (texto == null || texto.isBlank()) {
+            throw new DateTimeParseException("Data vazia", "", 0);
+        }
+        String limpo = texto.trim();
+        if (limpo.contains("/")) {
+            return LocalDate.parse(limpo, DATA_BR_BARRA_FORMATTER);
+        }
+        return LocalDate.parse(limpo, DATA_BR_FORMATTER);
+    }
+
+    // ── Formatação de CPF e Telefone ──
+
+    public static String formatarCpf(String valor) {
+        if (valor == null) return "";
+        String digits = valor.replaceAll("\\D", "");
+        if (digits.length() > 11) {
+            digits = digits.substring(0, 11);
+        }
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < digits.length(); i++) {
+            if (i == 3 || i == 6) sb.append('.');
+            else if (i == 9) sb.append('-');
+            sb.append(digits.charAt(i));
+        }
+        return sb.toString();
+    }
+
+    public static String formatarTelefone(String valor) {
+        if (valor == null) return "";
+        String digits = valor.replaceAll("\\D", "");
+        if (digits.length() > 11) {
+            digits = digits.substring(0, 11);
+        }
+        int len = digits.length();
+        if (len == 0) return "";
+        StringBuilder sb = new StringBuilder();
+        sb.append('(');
+        for (int i = 0; i < len; i++) {
+            if (i == 2) {
+                sb.append(") ");
+            } else if ((len <= 10 && i == 6) || (len == 11 && i == 7)) {
+                sb.append('-');
+            }
+            sb.append(digits.charAt(i));
+        }
+        return sb.toString();
+    }
+
+    public static String formatarTextoDataBR(String valor) {
+        if (valor == null) return "";
+        String digits = valor.replaceAll("\\D", "");
+        if (digits.length() > 8) {
+            digits = digits.substring(0, 8);
+        }
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < digits.length(); i++) {
+            if (i == 2 || i == 4) sb.append('-');
+            sb.append(digits.charAt(i));
+        }
+        return sb.toString();
+    }
+
+    public static String apenasDigitos(String valor) {
+        return valor == null ? "" : valor.replaceAll("\\D", "");
+    }
+
+    public static void aplicarMascaraCpf(JTextField field) {
+        aplicarMascaraNumerica(field, 11, UIHelper::formatarCpf);
+    }
+
+    public static void aplicarMascaraTelefone(JTextField field) {
+        aplicarMascaraNumerica(field, 11, UIHelper::formatarTelefone);
+    }
+
+    public static void aplicarMascaraDataBR(JTextField field) {
+        aplicarMascaraNumerica(field, 8, UIHelper::formatarTextoDataBR);
+    }
+
+    private interface MaskFormatterFn {
+        String format(String digits);
+    }
+
+    private static void aplicarMascaraNumerica(JTextField field, int maxDigitos, MaskFormatterFn formatter) {
+        Document doc = field.getDocument();
+        if (!(doc instanceof AbstractDocument)) return;
+        ((AbstractDocument) doc).setDocumentFilter(new DocumentFilter() {
+            private int contarDigitosAte(String texto, int limite) {
+                int count = 0;
+                int end = Math.min(limite, texto.length());
+                for (int i = 0; i < end; i++) {
+                    if (Character.isDigit(texto.charAt(i))) count++;
+                }
+                return count;
+            }
+
+            private int encontrarPosicaoPorDigitos(String formatado, int qtdDigitos) {
+                if (qtdDigitos <= 0) return 0;
+                int count = 0;
+                for (int i = 0; i < formatado.length(); i++) {
+                    if (Character.isDigit(formatado.charAt(i))) {
+                        count++;
+                        if (count == qtdDigitos) {
+                            return i + 1;
+                        }
+                    }
+                }
+                return formatado.length();
+            }
+
+            private void aplicar(FilterBypass fb, int offset, int length, String textoInserido) throws BadLocationException {
+                String atual = fb.getDocument().getText(0, fb.getDocument().getLength());
+                String inseridoDigitos = apenasDigitos(textoInserido);
+
+                // Caso o usuário aperte Backspace exatamente sobre um caractere de máscara (., -, (, ), espaço),
+                // remove o dígito imediatamente anterior para que apagar funcione de forma natural.
+                int realOffset = offset;
+                int realLength = length;
+                if (textoInserido.isEmpty() && length == 1 && offset < atual.length()
+                        && !Character.isDigit(atual.charAt(offset))) {
+                    int prevDigitIdx = offset - 1;
+                    while (prevDigitIdx >= 0 && !Character.isDigit(atual.charAt(prevDigitIdx))) {
+                        prevDigitIdx--;
+                    }
+                    if (prevDigitIdx >= 0) {
+                        realOffset = prevDigitIdx;
+                        realLength = (offset + length) - prevDigitIdx;
+                    }
+                }
+
+                String antes = atual.substring(0, realOffset);
+                String depois = atual.substring(Math.min(realOffset + realLength, atual.length()));
+
+                String digitosAntes = apenasDigitos(antes);
+                String digitosDepois = apenasDigitos(depois);
+
+                int espacoDisponivel = Math.max(0, maxDigitos - (digitosAntes.length() + digitosDepois.length()));
+                if (inseridoDigitos.length() > espacoDisponivel) {
+                    inseridoDigitos = inseridoDigitos.substring(0, espacoDisponivel);
+                }
+
+                String todosDigitos = digitosAntes + inseridoDigitos + digitosDepois;
+                if (todosDigitos.length() > maxDigitos) {
+                    todosDigitos = todosDigitos.substring(0, maxDigitos);
+                }
+
+                String formatado = formatter.format(todosDigitos);
+                int digitosAteCursor = Math.min(digitosAntes.length() + inseridoDigitos.length(), todosDigitos.length());
+
+                fb.replace(0, fb.getDocument().getLength(), formatado, null);
+
+                int novaPosicao = encontrarPosicaoPorDigitos(formatado, digitosAteCursor);
+                SwingUtilities.invokeLater(() -> {
+                    int pos = Math.min(novaPosicao, field.getDocument().getLength());
+                    field.setCaretPosition(pos);
+                });
+            }
+
+            @Override
+            public void insertString(FilterBypass fb, int offset, String string, AttributeSet attr) throws BadLocationException {
+                if (string == null) return;
+                aplicar(fb, offset, 0, string);
+            }
+
+            @Override
+            public void replace(FilterBypass fb, int offset, int length, String text, AttributeSet attrs) throws BadLocationException {
+                aplicar(fb, offset, length, text == null ? "" : text);
+            }
+
+            @Override
+            public void remove(FilterBypass fb, int offset, int length) throws BadLocationException {
+                aplicar(fb, offset, length, "");
+            }
+        });
+    }
 
     // ── Popups ──
 
@@ -39,7 +234,23 @@ public final class UIHelper {
     // ── Campos de Texto ──
 
     public static JTextField createTextField(String placeholder) {
-        JTextField field = new JTextField();
+        JTextField field = new JTextField() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                if (placeholder != null && !placeholder.isEmpty() && getText().isEmpty()) {
+                    Graphics2D g2 = (Graphics2D) g.create();
+                    g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+                    g2.setColor(TEXT_PLACEHOLDER);
+                    g2.setFont(getFont());
+                    Insets insets = getInsets();
+                    FontMetrics fm = g2.getFontMetrics();
+                    int y = insets.top + ((getHeight() - insets.top - insets.bottom - fm.getHeight()) / 2) + fm.getAscent();
+                    g2.drawString(placeholder, insets.left, y);
+                    g2.dispose();
+                }
+            }
+        };
         field.setFont(FONT_INPUT);
         field.setPreferredSize(new Dimension(250, INPUT_HEIGHT));
         field.setMaximumSize(new Dimension(Integer.MAX_VALUE, INPUT_HEIGHT));
@@ -50,28 +261,6 @@ public final class UIHelper {
         field.setBackground(BG_INPUT);
         field.setForeground(TEXT_PRIMARY);
         field.setCaretColor(TEXT_PRIMARY);
-
-        // Placeholder
-        if (placeholder != null && !placeholder.isEmpty()) {
-            field.setForeground(TEXT_PLACEHOLDER);
-            field.setText(placeholder);
-            field.addFocusListener(new FocusAdapter() {
-                @Override
-                public void focusGained(FocusEvent e) {
-                    if (field.getText().equals(placeholder)) {
-                        field.setText("");
-                        field.setForeground(TEXT_PRIMARY);
-                    }
-                }
-                @Override
-                public void focusLost(FocusEvent e) {
-                    if (field.getText().isEmpty()) {
-                        field.setForeground(TEXT_PLACEHOLDER);
-                        field.setText(placeholder);
-                    }
-                }
-            });
-        }
         return field;
     }
 
@@ -213,11 +402,24 @@ public final class UIHelper {
     // ── Painel de Formulário ──
 
     public static JPanel createFormRow(String labelText, JComponent field) {
+        return createFormRow(labelText, field, false);
+    }
+
+    public static JPanel createFormRow(String labelText, JComponent field, boolean obrigatorio) {
         JPanel row = new JPanel(new BorderLayout(10, 0));
         row.setOpaque(false);
         row.setMaximumSize(new Dimension(Integer.MAX_VALUE, INPUT_HEIGHT + 4));
-        JLabel label = createLabel(labelText);
-        label.setPreferredSize(new Dimension(140, INPUT_HEIGHT));
+        String textoFinal = labelText;
+        if (obrigatorio) {
+            if (labelText.endsWith(":")) {
+                String base = labelText.substring(0, labelText.length() - 1);
+                textoFinal = "<html>" + base + " <font color='#C62828'>*</font>:</html>";
+            } else {
+                textoFinal = "<html>" + labelText + " <font color='#C62828'>*</font></html>";
+            }
+        }
+        JLabel label = createLabel(textoFinal);
+        label.setPreferredSize(new Dimension(145, INPUT_HEIGHT));
         label.setHorizontalAlignment(SwingConstants.RIGHT);
         row.add(label, BorderLayout.WEST);
         row.add(field, BorderLayout.CENTER);

@@ -1,8 +1,10 @@
 package com.poo.biblioteca.ui;
 
+import com.poo.biblioteca.Copia;
 import com.poo.biblioteca.Leitor;
 import com.poo.biblioteca.Obra;
 import com.poo.biblioteca.Reserva;
+import com.poo.biblioteca.StatusCopia;
 import com.poo.biblioteca.StatusReserva;
 import com.poo.biblioteca.exception.ReservaInvalidaException;
 
@@ -52,15 +54,18 @@ public class ReservaPanel extends JPanel {
     private static class ObraItem {
         final int id;
         final String titulo;
+        final int copiasDisponiveis;
 
-        ObraItem(int id, String titulo) {
+        ObraItem(int id, String titulo, int copiasDisponiveis) {
             this.id = id;
             this.titulo = titulo;
+            this.copiasDisponiveis = copiasDisponiveis;
         }
 
         @Override
         public String toString() {
-            return "[" + id + "] " + titulo;
+            String labelDisp = copiasDisponiveis == 1 ? "1 disponível" : copiasDisponiveis + " disponíveis";
+            return "[" + id + "] " + titulo + " (" + labelDisp + ")";
         }
     }
 
@@ -210,6 +215,11 @@ public class ReservaPanel extends JPanel {
         add(pnlCentro, BorderLayout.CENTER);
     }
 
+    public void recarregarDados() {
+        carregarCombos();
+        carregarTabela();
+    }
+
     private void carregarCombos() {
         cmbLeitor.removeAllItems();
         cmbObra.removeAllItems();
@@ -220,9 +230,13 @@ public class ReservaPanel extends JPanel {
                     cmbLeitor.addItem(new LeitorItem(l.getId(), l.getNome(), l.getMatricula()));
                 }
             }
-            List<Obra> obras = service.listarObras();
-            for (Obra o : obras) {
-                cmbObra.addItem(new ObraItem(o.getId(), o.getTitulo()));
+            // Exibe no ComboBox apenas obras que possuem ao menos uma cópia DISPONÍVEL
+            List<Obra> obrasDisponiveis = service.listarObrasComCopiasDisponiveis();
+            for (Obra o : obrasDisponiveis) {
+                int qtdDisponiveis = o.getCopiasDisponiveis().size();
+                if (qtdDisponiveis > 0) {
+                    cmbObra.addItem(new ObraItem(o.getId(), o.getTitulo(), qtdDisponiveis));
+                }
             }
         } catch (Exception ex) {
             UIHelper.showError(this, "Erro ao carregar leitores e obras: " + ex.getMessage());
@@ -257,8 +271,8 @@ public class ReservaPanel extends JPanel {
                         r.getId(),
                         nomeLeitor,
                         tituloObra,
-                        r.getDataReserva() != null ? r.getDataReserva().toString() : "-",
-                        r.getDataExpiracao() != null ? r.getDataExpiracao().toString() : "-",
+                        UIHelper.formatarDataBR(r.getDataReserva()),
+                        UIHelper.formatarDataBR(r.getDataExpiracao()),
                         r.getStatus() != null ? r.getStatus().name() : "-"
                 });
             }
@@ -275,11 +289,19 @@ public class ReservaPanel extends JPanel {
             if (reservaSelecionada != null) {
                 lblReservaSelecionada.setText("<html><b>Reserva #" + reservaSelecionada.getId() + "</b> selecionada.<br>"
                         + "Status: <b>" + reservaSelecionada.getStatus() + "</b> | Expira em: "
-                        + reservaSelecionada.getDataExpiracao() + "</html>");
+                        + UIHelper.formatarDataBR(reservaSelecionada.getDataExpiracao()) + "</html>");
             }
         } else {
             reservaSelecionada = null;
             lblReservaSelecionada.setText("Selecione uma reserva na tabela acima.");
+        }
+    }
+
+    private void liberarCopiaReservadaDaObra(int obraId) {
+        Copia copiaReservada = service.buscarCopiaReservadaPorObra(obraId);
+        if (copiaReservada != null && copiaReservada.getId() > 0) {
+            copiaReservada.setStatus(StatusCopia.DISPONIVEL);
+            service.getCopiaDAO().alterar(copiaReservada);
         }
     }
 
@@ -288,11 +310,23 @@ public class ReservaPanel extends JPanel {
         ObraItem obraItem = (ObraItem) cmbObra.getSelectedItem();
 
         if (leitorItem == null || obraItem == null) {
-            UIHelper.showWarning(this, "Selecione o leitor e a obra para registrar a reserva.");
+            UIHelper.showWarning(this, "Selecione o leitor e uma obra com cópia disponível para registrar a reserva.");
             return;
         }
 
         try {
+            // Valida disponibilidade de cópia antes de confirmar a reserva
+            List<Copia> copiasDisponiveis = service.listarCopiasDisponiveisPorObra(obraItem.id);
+            if (copiasDisponiveis.isEmpty()) {
+                UIHelper.showWarning(this, "Não há cópias disponíveis para a obra selecionada no momento.");
+                carregarCombos();
+                return;
+            }
+
+            Copia copiaParaReservar = copiasDisponiveis.get(0);
+            copiaParaReservar.setStatus(StatusCopia.RESERVADA);
+            service.getCopiaDAO().alterar(copiaParaReservar);
+
             Leitor leitor = new Leitor();
             leitor.setId(leitorItem.id);
             leitor.setNome(leitorItem.nome);
@@ -309,8 +343,10 @@ public class ReservaPanel extends JPanel {
                     + "Código: #" + reserva.getId() + "\n"
                     + "Leitor: " + leitorItem.nome + "\n"
                     + "Obra: " + obraItem.titulo + "\n"
-                    + "Data de Expiração: " + reserva.getDataExpiracao() + " (Prazo: 3 dias)");
+                    + "Cópia reservada: " + copiaParaReservar.getCodigoBarras() + "\n"
+                    + "Data de Expiração: " + UIHelper.formatarDataBR(reserva.getDataExpiracao()) + " (Prazo: 3 dias)");
 
+            carregarCombos();
             carregarTabela();
 
         } catch (Exception ex) {
@@ -324,6 +360,8 @@ public class ReservaPanel extends JPanel {
             return;
         }
 
+        boolean estavaAtiva = reservaSelecionada.getStatus() == StatusReserva.ATIVA;
+
         try {
             // Executa regra de negócio da máquina de estados
             // Lança ReservaInvalidaException se já cancelada, já concluída ou se expirou o prazo
@@ -332,19 +370,29 @@ public class ReservaPanel extends JPanel {
             // Persiste o novo status no banco
             service.getReservaDAO().atualizar(reservaSelecionada);
 
+            if (estavaAtiva && reservaSelecionada.getObra() != null) {
+                liberarCopiaReservadaDaObra(reservaSelecionada.getObra().getId());
+            }
+
             UIHelper.showSuccess(this, "Reserva #" + reservaSelecionada.getId()
                     + " concluída com sucesso!\nO exemplar agora pode ser emprestado ao leitor.");
 
+            carregarCombos();
             carregarTabela();
 
         } catch (ReservaInvalidaException ex) {
             // Se expirou durante a tentativa de conclusão, persiste o status EXPIRADA assumido
             try {
                 service.getReservaDAO().atualizar(reservaSelecionada);
+                if (estavaAtiva && reservaSelecionada.getStatus() == StatusReserva.EXPIRADA
+                        && reservaSelecionada.getObra() != null) {
+                    liberarCopiaReservadaDaObra(reservaSelecionada.getObra().getId());
+                }
             } catch (Exception ignored) {}
 
             UIHelper.showError(this, "Aviso de Regra de Negócio:\n" + ex.getMessage()
                     + "\nStatus assumido: " + reservaSelecionada.getStatus());
+            carregarCombos();
             carregarTabela();
 
         } catch (Exception ex) {
@@ -362,12 +410,19 @@ public class ReservaPanel extends JPanel {
                 "Deseja realmente cancelar a reserva #" + reservaSelecionada.getId() + "?");
         if (!confirmou) return;
 
+        boolean estavaAtiva = reservaSelecionada.getStatus() == StatusReserva.ATIVA;
+
         try {
             // Executa regra de negócio da máquina de estados
             reservaSelecionada.cancelar();
             service.getReservaDAO().atualizar(reservaSelecionada);
 
+            if (estavaAtiva && reservaSelecionada.getObra() != null) {
+                liberarCopiaReservadaDaObra(reservaSelecionada.getObra().getId());
+            }
+
             UIHelper.showSuccess(this, "Reserva #" + reservaSelecionada.getId() + " cancelada com sucesso.");
+            carregarCombos();
             carregarTabela();
 
         } catch (ReservaInvalidaException ex) {
@@ -389,8 +444,12 @@ public class ReservaPanel extends JPanel {
         if (!confirmou) return;
 
         try {
+            if (reservaSelecionada.getStatus() == StatusReserva.ATIVA && reservaSelecionada.getObra() != null) {
+                liberarCopiaReservadaDaObra(reservaSelecionada.getObra().getId());
+            }
             service.getReservaDAO().deletar(reservaSelecionada.getId());
             UIHelper.showSuccess(this, "Registro da reserva apagado com sucesso.");
+            carregarCombos();
             carregarTabela();
         } catch (Exception ex) {
             UIHelper.showError(this, "Erro ao deletar reserva: " + ex.getMessage());

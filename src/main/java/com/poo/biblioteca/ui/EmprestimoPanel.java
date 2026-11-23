@@ -40,16 +40,26 @@ public class EmprestimoPanel extends JPanel {
         final int id;
         final String nome;
         final int prazoDias;
+        final boolean funcionario;
 
-        LeitorItem(int id, String nome, int prazoDias) {
+        LeitorItem(int id, String nome, int prazoDias, boolean funcionario) {
             this.id = id;
             this.nome = nome;
             this.prazoDias = prazoDias;
+            this.funcionario = funcionario;
+        }
+
+        String getTag() {
+            return funcionario ? "[FUNCIONÁRIO] " : "[LEITOR] ";
+        }
+
+        String getNomeComTag() {
+            return getTag() + nome;
         }
 
         @Override
         public String toString() {
-            return "[" + id + "] " + nome + " (" + prazoDias + " dias)";
+            return getNomeComTag() + " (" + prazoDias + " dias)";
         }
     }
 
@@ -86,7 +96,7 @@ public class EmprestimoPanel extends JPanel {
         // Cabeçalho
         JPanel pnlHeader = new JPanel(new BorderLayout());
         pnlHeader.setOpaque(false);
-        JLabel lblTitulo = UIHelper.createTitleLabel("📦 Circulação: Empréstimos & Devoluções");
+        JLabel lblTitulo = UIHelper.createTitleLabel("📦 Empréstimos e Multas");
         String nomeOperador = (funcionarioLogado != null) ? funcionarioLogado.getNome() : "Administrador";
         JLabel lblSub = new JLabel("Operador responsável: " + nomeOperador + " | Registro de retiradas, entregas e multas");
         lblSub.setFont(FONT_SMALL);
@@ -149,13 +159,16 @@ public class EmprestimoPanel extends JPanel {
         cmbLeitor.setFont(FONT_INPUT);
         cmbLeitor.setBackground(BG_INPUT);
         cmbLeitor.setForeground(TEXT_PRIMARY);
+        cmbLeitor.addActionListener(e -> atualizarInfoPrazo());
 
         cmbCopia = new JComboBox<>();
         cmbCopia.setFont(FONT_INPUT);
         cmbCopia.setBackground(BG_INPUT);
         cmbCopia.setForeground(TEXT_PRIMARY);
 
-        txtDataEmprestimo = UIHelper.createTextField(LocalDate.now().toString());
+        txtDataEmprestimo = UIHelper.createTextField("dd-mm-aaaa");
+        UIHelper.aplicarMascaraDataBR(txtDataEmprestimo);
+        txtDataEmprestimo.setText(UIHelper.formatarDataBR(LocalDate.now()));
         lblPrazoInfo = new JLabel("Prazo calculado automaticamente conforme perfil do leitor.");
         lblPrazoInfo.setFont(FONT_SMALL);
         lblPrazoInfo.setForeground(ACCENT);
@@ -166,7 +179,7 @@ public class EmprestimoPanel extends JPanel {
 
         cardNovo.add(lblNovoTit);
         cardNovo.add(Box.createVerticalStrut(8));
-        cardNovo.add(UIHelper.createFormRow("Leitor:", cmbLeitor));
+        cardNovo.add(UIHelper.createFormRow("Leitor / Func.:", cmbLeitor));
         cardNovo.add(Box.createVerticalStrut(6));
         cardNovo.add(UIHelper.createFormRow("Cópia Disponível:", cmbCopia));
         cardNovo.add(Box.createVerticalStrut(6));
@@ -189,7 +202,9 @@ public class EmprestimoPanel extends JPanel {
         lblEmprestimoSelecionado.setFont(FONT_BODY);
         lblEmprestimoSelecionado.setForeground(TEXT_SECONDARY);
 
-        txtDataDevolucao = UIHelper.createTextField(LocalDate.now().toString());
+        txtDataDevolucao = UIHelper.createTextField("dd-mm-aaaa");
+        UIHelper.aplicarMascaraDataBR(txtDataDevolucao);
+        txtDataDevolucao.setText(UIHelper.formatarDataBR(LocalDate.now()));
 
         JButton btnDevolver = UIHelper.createPrimaryButton("Receber Devolução");
         btnDevolver.addActionListener(e -> finalizarDevolucao());
@@ -219,6 +234,27 @@ public class EmprestimoPanel extends JPanel {
         add(pnlCentro, BorderLayout.CENTER);
     }
 
+    public void recarregarDados() {
+        carregarCombos();
+        carregarTabela();
+        if (txtDataEmprestimo.getText().isBlank()) {
+            txtDataEmprestimo.setText(UIHelper.formatarDataBR(LocalDate.now()));
+        }
+        if (txtDataDevolucao.getText().isBlank()) {
+            txtDataDevolucao.setText(UIHelper.formatarDataBR(LocalDate.now()));
+        }
+    }
+
+    private void atualizarInfoPrazo() {
+        LeitorItem selecionado = (LeitorItem) cmbLeitor.getSelectedItem();
+        if (selecionado != null) {
+            String tipo = selecionado.funcionario ? "Funcionário" : "Leitor";
+            lblPrazoInfo.setText("Prazo padrão: " + selecionado.prazoDias + " dias (" + tipo + ")");
+        } else {
+            lblPrazoInfo.setText("Prazo calculado automaticamente conforme perfil do leitor.");
+        }
+    }
+
     private void carregarCombos() {
         cmbLeitor.removeAllItems();
         cmbCopia.removeAllItems();
@@ -226,15 +262,23 @@ public class EmprestimoPanel extends JPanel {
             List<Leitor> leitores = service.listarLeitores();
             for (Leitor l : leitores) {
                 if (l.isAtivo()) {
-                    cmbLeitor.addItem(new LeitorItem(l.getId(), l.getNome(), l.getPrazoEmprestimoDias()));
+                    cmbLeitor.addItem(new LeitorItem(l.getId(), l.getNome(), l.getPrazoEmprestimoDias(), false));
                 }
             }
+            List<Funcionario> funcionarios = service.listarFuncionarios();
+            for (Funcionario f : funcionarios) {
+                cmbLeitor.addItem(new LeitorItem(f.getId(), f.getNome(), f.getPrazoEmprestimoDias(), true));
+            }
+            // Exibe no ComboBox somente cópias com status DISPONIVEL
             List<Copia> copiasDisponiveis = service.listarCopiasDisponiveis();
             for (Copia c : copiasDisponiveis) {
-                String titulo = (c.getObra() != null && c.getObra().getTitulo() != null)
-                        ? c.getObra().getTitulo() : "Sem Título";
-                cmbCopia.addItem(new CopiaItem(c.getId(), c.getCodigoBarras(), titulo));
+                if (c != null && c.isDisponivel()) {
+                    String titulo = (c.getObra() != null && c.getObra().getTitulo() != null)
+                            ? c.getObra().getTitulo() : "Sem Título";
+                    cmbCopia.addItem(new CopiaItem(c.getId(), c.getCodigoBarras(), titulo));
+                }
             }
+            atualizarInfoPrazo();
         } catch (Exception ex) {
             UIHelper.showError(this, "Erro ao carregar seletores de empréstimo: " + ex.getMessage());
         }
@@ -248,13 +292,25 @@ public class EmprestimoPanel extends JPanel {
         try {
             List<Emprestimo> lista = service.listarEmprestimos();
             for (Emprestimo emp : lista) {
-                String nomeLeitor = "Leitor #" + emp.getLeitor().getId();
-                try {
-                    Leitor l = service.getLeitorDAO().carregar(emp.getLeitor().getId());
-                    if (l != null && l.getNome() != null) {
-                        nomeLeitor = l.getNome();
-                    }
-                } catch (Exception ignored) {}
+                String nomeLeitor;
+                Integer funcionarioLeitorId = service.buscarFuncionarioLeitorDoEmprestimo(emp.getId());
+                if (funcionarioLeitorId != null) {
+                    nomeLeitor = "[FUNCIONÁRIO] Funcionário #" + funcionarioLeitorId;
+                    try {
+                        Funcionario f = service.getFuncionarioDAO().carregar(funcionarioLeitorId);
+                        if (f != null && f.getNome() != null) {
+                            nomeLeitor = "[FUNCIONÁRIO] " + f.getNome();
+                        }
+                    } catch (Exception ignored) {}
+                } else {
+                    nomeLeitor = "[LEITOR] Leitor #" + emp.getLeitor().getId();
+                    try {
+                        Leitor l = service.getLeitorDAO().carregar(emp.getLeitor().getId());
+                        if (l != null && l.getNome() != null) {
+                            nomeLeitor = "[LEITOR] " + l.getNome();
+                        }
+                    } catch (Exception ignored) {}
+                }
 
                 String infoCopia = "Cópia #" + emp.getCopia().getId();
                 try {
@@ -266,15 +322,15 @@ public class EmprestimoPanel extends JPanel {
 
                 boolean isAberto = (emp.getDataDevolucaoReal() == null);
                 String situacao = isAberto ? "⏳ EM ABERTO" : "✔ DEVOLVIDO";
-                String dataDevReal = isAberto ? "Pendente" : emp.getDataDevolucaoReal().toString();
+                String dataDevReal = isAberto ? "Pendente" : UIHelper.formatarDataBR(emp.getDataDevolucaoReal());
                 String multaFormatada = String.format("R$ %.2f", emp.getValorMulta());
 
                 tableModel.addRow(new Object[]{
                         emp.getId(),
                         nomeLeitor,
                         infoCopia,
-                        emp.getDataEmprestimo() != null ? emp.getDataEmprestimo().toString() : "-",
-                        emp.getDataPrevistaDevolucao() != null ? emp.getDataPrevistaDevolucao().toString() : "-",
+                        UIHelper.formatarDataBR(emp.getDataEmprestimo()),
+                        UIHelper.formatarDataBR(emp.getDataPrevistaDevolucao()),
                         dataDevReal,
                         multaFormatada,
                         situacao
@@ -293,12 +349,14 @@ public class EmprestimoPanel extends JPanel {
             if (emprestimoSelecionado != null) {
                 if (emprestimoSelecionado.getDataDevolucaoReal() == null) {
                     lblEmprestimoSelecionado.setText("<html>Empréstimo <b>#" + emprestimoSelecionado.getId()
-                            + "</b> em aberto.<br>Devolução Prevista: <b>" + emprestimoSelecionado.getDataPrevistaDevolucao()
+                            + "</b> em aberto.<br>Devolução Prevista: <b>"
+                            + UIHelper.formatarDataBR(emprestimoSelecionado.getDataPrevistaDevolucao())
                             + "</b></html>");
-                    txtDataDevolucao.setText(LocalDate.now().toString());
+                    txtDataDevolucao.setText(UIHelper.formatarDataBR(LocalDate.now()));
                 } else {
                     lblEmprestimoSelecionado.setText("<html>Empréstimo <b>#" + emprestimoSelecionado.getId()
-                            + "</b> já finalizado em " + emprestimoSelecionado.getDataDevolucaoReal()
+                            + "</b> já finalizado em "
+                            + UIHelper.formatarDataBR(emprestimoSelecionado.getDataDevolucaoReal())
                             + " (Multa: R$ " + String.format("%.2f", emprestimoSelecionado.getValorMulta()) + ")</html>");
                 }
             }
@@ -313,15 +371,16 @@ public class EmprestimoPanel extends JPanel {
         CopiaItem copiaItem = (CopiaItem) cmbCopia.getSelectedItem();
 
         if (leitorItem == null || copiaItem == null) {
-            UIHelper.showWarning(this, "Selecione o leitor associado e a cópia disponível.");
+            UIHelper.showWarning(this, "Selecione o leitor/funcionário e uma cópia disponível.");
             return;
         }
 
         LocalDate dataEmprestimo;
         try {
-            dataEmprestimo = LocalDate.parse(txtDataEmprestimo.getText().trim());
+            dataEmprestimo = UIHelper.parseDataBR(txtDataEmprestimo.getText().trim());
         } catch (DateTimeParseException ex) {
-            UIHelper.showWarning(this, "A data de empréstimo deve estar no formato AAAA-MM-DD (ex: 2026-11-23).");
+            UIHelper.showWarning(this, "A data de empréstimo deve estar no formato DD-MM-AAAA (ex: "
+                    + UIHelper.formatarDataBR(LocalDate.now()) + ").");
             return;
         }
 
@@ -333,11 +392,13 @@ public class EmprestimoPanel extends JPanel {
             Copia copia = service.getCopiaDAO().carregar(copiaItem.id);
             if (copia == null || copia.getId() == 0) {
                 UIHelper.showError(this, "Exemplar selecionado não pôde ser carregado do acervo.");
+                carregarCombos();
                 return;
             }
 
             if (!copia.isDisponivel()) {
                 UIHelper.showWarning(this, "A cópia selecionada não está disponível para empréstimo (Status: " + copia.getStatus() + ").");
+                carregarCombos();
                 return;
             }
 
@@ -358,13 +419,18 @@ public class EmprestimoPanel extends JPanel {
             // 2. Salva o empréstimo
             service.getEmprestimoDAO().inserir(emp);
 
+            // 3. Caso o tomador seja um funcionário, registra o vínculo auxiliar na camada de UI
+            if (leitorItem.funcionario && emp.getId() > 0) {
+                service.registrarEmprestimoDeFuncionario(emp.getId(), leitorItem.id);
+            }
+
             UIHelper.showSuccess(this, "Empréstimo registrado com sucesso!\n\n"
                     + "Código do Empréstimo: #" + emp.getId() + "\n"
-                    + "Leitor: " + leitorItem.nome + "\n"
+                    + "Tomador: " + leitorItem.getNomeComTag() + "\n"
                     + "Exemplar: " + copiaItem.codigoBarras + " (" + copiaItem.obraTitulo + ")\n"
-                    + "Data de Retirada: " + dataEmprestimo + "\n"
+                    + "Data de Retirada: " + UIHelper.formatarDataBR(dataEmprestimo) + "\n"
                     + "Prazo Concedido: " + leitorItem.prazoDias + " dias\n"
-                    + "Data Limite de Devolução: " + dataPrevista);
+                    + "Data Limite de Devolução: " + UIHelper.formatarDataBR(dataPrevista));
 
             carregarCombos();
             carregarTabela();
@@ -382,15 +448,16 @@ public class EmprestimoPanel extends JPanel {
 
         if (emprestimoSelecionado.getDataDevolucaoReal() != null) {
             UIHelper.showWarning(this, "Este empréstimo já foi finalizado em "
-                    + emprestimoSelecionado.getDataDevolucaoReal() + ".");
+                    + UIHelper.formatarDataBR(emprestimoSelecionado.getDataDevolucaoReal()) + ".");
             return;
         }
 
         LocalDate dataDevolucao;
         try {
-            dataDevolucao = LocalDate.parse(txtDataDevolucao.getText().trim());
+            dataDevolucao = UIHelper.parseDataBR(txtDataDevolucao.getText().trim());
         } catch (DateTimeParseException ex) {
-            UIHelper.showWarning(this, "A data de devolução deve estar no formato AAAA-MM-DD.");
+            UIHelper.showWarning(this, "A data de devolução deve estar no formato DD-MM-AAAA (ex: "
+                    + UIHelper.formatarDataBR(LocalDate.now()) + ").");
             return;
         }
 
@@ -419,7 +486,7 @@ public class EmprestimoPanel extends JPanel {
 
             UIHelper.showSuccess(this, "Devolução concluída com sucesso!\n\n"
                     + "Empréstimo: #" + emprestimoSelecionado.getId() + "\n"
-                    + "Data de Devolução Real: " + dataDevolucao + "\n"
+                    + "Data de Devolução Real: " + UIHelper.formatarDataBR(dataDevolucao) + "\n"
                     + "Exemplar liberado e voltou ao status DISPONÍVEL.\n\n"
                     + "Situação Financeira: " + msgMulta);
 
@@ -445,6 +512,14 @@ public class EmprestimoPanel extends JPanel {
         if (!confirmou) return;
 
         try {
+            if (emprestimoSelecionado.getDataDevolucaoReal() == null && emprestimoSelecionado.getCopia() != null) {
+                Copia copia = service.getCopiaDAO().carregar(emprestimoSelecionado.getCopia().getId());
+                if (copia != null && copia.getId() > 0 && copia.getStatus() == StatusCopia.EMPRESTADA) {
+                    copia.setStatus(StatusCopia.DISPONIVEL);
+                    service.getCopiaDAO().alterar(copia);
+                }
+            }
+            service.removerVinculoFuncionarioEmprestimo(emprestimoSelecionado.getId());
             service.getEmprestimoDAO().deletar(emprestimoSelecionado.getId());
             UIHelper.showSuccess(this, "Registro do empréstimo excluído com sucesso.");
             carregarCombos();

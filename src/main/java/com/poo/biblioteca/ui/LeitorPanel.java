@@ -89,14 +89,20 @@ public class LeitorPanel extends JPanel {
         lblFormTitulo.setFont(FONT_SUBTITLE);
         lblFormTitulo.setForeground(TEXT_PRIMARY);
 
+        JLabel lblObrigatorio = new JLabel("<html><font color='#C62828'>*</font> Campos obrigatórios</html>");
+        lblObrigatorio.setFont(FONT_SMALL);
+        lblObrigatorio.setForeground(TEXT_SECONDARY);
+
         txtId = UIHelper.createTextField("");
         txtId.setEditable(false);
         txtId.setBackground(BG_MAIN);
 
         txtNome = UIHelper.createTextField("Ex: Ana Beatriz Silva");
         txtCpf = UIHelper.createTextField("000.000.000-00");
+        UIHelper.aplicarMascaraCpf(txtCpf);
         txtEmail = UIHelper.createTextField("exemplo@email.com");
         txtTelefone = UIHelper.createTextField("(00) 00000-0000");
+        UIHelper.aplicarMascaraTelefone(txtTelefone);
         txtMatricula = UIHelper.createTextField("2026-A01");
 
         chkAtivo = new JCheckBox("Cadastro Ativo na Biblioteca");
@@ -110,12 +116,14 @@ public class LeitorPanel extends JPanel {
         lblIdentificador.setForeground(ACCENT);
 
         pnlCard.add(lblFormTitulo);
-        pnlCard.add(Box.createVerticalStrut(14));
+        pnlCard.add(Box.createVerticalStrut(4));
+        pnlCard.add(lblObrigatorio);
+        pnlCard.add(Box.createVerticalStrut(12));
         pnlCard.add(UIHelper.createFormRow("Código (ID):", txtId));
         pnlCard.add(Box.createVerticalStrut(8));
-        pnlCard.add(UIHelper.createFormRow("Nome Completo:", txtNome));
+        pnlCard.add(UIHelper.createFormRow("Nome Completo:", txtNome, true));
         pnlCard.add(Box.createVerticalStrut(8));
-        pnlCard.add(UIHelper.createFormRow("CPF:", txtCpf));
+        pnlCard.add(UIHelper.createFormRow("CPF:", txtCpf, true));
         pnlCard.add(Box.createVerticalStrut(8));
         pnlCard.add(UIHelper.createFormRow("Matrícula:", txtMatricula));
         pnlCard.add(Box.createVerticalStrut(8));
@@ -153,6 +161,10 @@ public class LeitorPanel extends JPanel {
         add(splitPane, BorderLayout.CENTER);
     }
 
+    public void recarregarDados() {
+        carregarTabela();
+    }
+
     private void carregarTabela() {
         tableModel.setRowCount(0);
         try {
@@ -162,10 +174,10 @@ public class LeitorPanel extends JPanel {
                         l.getId(),
                         l.getIdentificadorFormatado(),
                         l.getNome(),
-                        l.getCpf(),
+                        UIHelper.formatarCpf(l.getCpf()),
                         l.getMatricula(),
                         l.getEmail(),
-                        l.getTelefone(),
+                        UIHelper.formatarTelefone(l.getTelefone()),
                         l.isAtivo() ? "Sim" : "Não"
                 });
             }
@@ -181,11 +193,11 @@ public class LeitorPanel extends JPanel {
             Leitor l = service.getLeitorDAO().carregar(id);
             if (l != null && l.getId() > 0) {
                 txtId.setText(String.valueOf(l.getId()));
-                txtNome.setText(l.getNome());
-                txtCpf.setText(l.getCpf());
-                txtEmail.setText(l.getEmail());
-                txtTelefone.setText(l.getTelefone());
-                txtMatricula.setText(l.getMatricula());
+                txtNome.setText(l.getNome() != null ? l.getNome() : "");
+                txtCpf.setText(UIHelper.formatarCpf(l.getCpf()));
+                txtEmail.setText(l.getEmail() != null ? l.getEmail() : "");
+                txtTelefone.setText(UIHelper.formatarTelefone(l.getTelefone()));
+                txtMatricula.setText(l.getMatricula() != null ? l.getMatricula() : "");
                 chkAtivo.setSelected(l.isAtivo());
                 lblIdentificador.setText("Identificador: " + l.getIdentificadorFormatado() +
                         " | Prazo: " + l.getPrazoEmprestimoDias() + " dias | Limite: " + l.getLimiteLivros() + " livros");
@@ -213,10 +225,26 @@ public class LeitorPanel extends JPanel {
         String telefone = txtTelefone.getText().trim();
         boolean ativo = chkAtivo.isSelected();
 
-        if (nome.isEmpty() || cpf.isEmpty()) {
-            UIHelper.showWarning(this, "Os campos 'Nome' e 'CPF' são obrigatórios.");
+        String cpfDigitos = UIHelper.apenasDigitos(cpf);
+        String telDigitos = UIHelper.apenasDigitos(telefone);
+
+        if (nome.isEmpty() || cpfDigitos.isEmpty()) {
+            UIHelper.showWarning(this, "Os campos obrigatórios (*) 'Nome Completo' e 'CPF' devem ser preenchidos.");
             return;
         }
+
+        if (cpfDigitos.length() != 11) {
+            UIHelper.showWarning(this, "Informe um CPF válido contendo 11 dígitos.");
+            return;
+        }
+
+        if (!telDigitos.isEmpty() && telDigitos.length() < 10) {
+            UIHelper.showWarning(this, "Informe um telefone válido com DDD (10 ou 11 dígitos) ou deixe o campo vazio.");
+            return;
+        }
+
+        cpf = UIHelper.formatarCpf(cpfDigitos);
+        telefone = telDigitos.isEmpty() ? "" : UIHelper.formatarTelefone(telDigitos);
 
         try {
             Leitor leitor = new Leitor();

@@ -60,7 +60,7 @@ public class CopiaPanel extends JPanel {
         // Cabeçalho
         JPanel pnlHeader = new JPanel(new BorderLayout());
         pnlHeader.setOpaque(false);
-        JLabel lblTitulo = UIHelper.createTitleLabel("📄 Acervo & Cópias Físicas");
+        JLabel lblTitulo = UIHelper.createTitleLabel("📄 Cópias");
         JLabel lblSub = new JLabel("Controle de exemplares, código de barras e disponibilidade");
         lblSub.setFont(FONT_SMALL);
         lblSub.setForeground(TEXT_SECONDARY);
@@ -182,6 +182,11 @@ public class CopiaPanel extends JPanel {
 
         splitPane.setRightComponent(pnlCard);
         add(splitPane, BorderLayout.CENTER);
+    }
+
+    public void recarregarDados() {
+        carregarComboObras();
+        carregarTabela();
     }
 
     private void carregarComboObras() {

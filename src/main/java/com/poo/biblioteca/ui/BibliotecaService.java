@@ -34,6 +34,59 @@ public class BibliotecaService {
         this.copiaDAO = new CopiaDAO();
         this.reservaDAO = new ReservaDAO();
         this.emprestimoDAO = new EmprestimoDAO();
+        criarTabelaVinculoFuncionarioLeitor();
+    }
+
+    private void criarTabelaVinculoFuncionarioLeitor() {
+        String sql = "CREATE TABLE IF NOT EXISTS emprestimo_funcionario_leitor ("
+                + " emprestimo_id integer PRIMARY KEY,"
+                + " funcionario_id integer NOT NULL"
+                + ");";
+        try (Connection conn = DriverManager.getConnection(URL);
+             Statement stmt = conn.createStatement()) {
+            stmt.execute(sql);
+        } catch (SQLException e) {
+            System.err.println("Erro ao criar tabela auxiliar de vínculo funcionário-leitor: " + e.getMessage());
+        }
+    }
+
+    public void registrarEmprestimoDeFuncionario(int emprestimoId, int funcionarioId) {
+        String sql = "INSERT OR REPLACE INTO emprestimo_funcionario_leitor (emprestimo_id, funcionario_id) VALUES (?, ?)";
+        try (Connection conn = DriverManager.getConnection(URL);
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, emprestimoId);
+            pstmt.setInt(2, funcionarioId);
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            System.err.println("Erro ao registrar vínculo funcionário-leitor: " + e.getMessage());
+        }
+    }
+
+    public Integer buscarFuncionarioLeitorDoEmprestimo(int emprestimoId) {
+        String sql = "SELECT funcionario_id FROM emprestimo_funcionario_leitor WHERE emprestimo_id = ?";
+        try (Connection conn = DriverManager.getConnection(URL);
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, emprestimoId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("funcionario_id");
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Erro ao consultar vínculo funcionário-leitor: " + e.getMessage());
+        }
+        return null;
+    }
+
+    public void removerVinculoFuncionarioEmprestimo(int emprestimoId) {
+        String sql = "DELETE FROM emprestimo_funcionario_leitor WHERE emprestimo_id = ?";
+        try (Connection conn = DriverManager.getConnection(URL);
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, emprestimoId);
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            System.err.println("Erro ao remover vínculo funcionário-leitor: " + e.getMessage());
+        }
     }
 
     // ── Acesso aos DAOs ──
@@ -188,6 +241,73 @@ public class BibliotecaService {
             System.err.println("Erro ao listar cópias disponíveis: " + e.getMessage());
         }
         return lista;
+    }
+
+    // ── Listagem de Cópias Disponíveis por Obra ──
+    public List<Copia> listarCopiasDisponiveisPorObra(int obraId) {
+        List<Copia> lista = new ArrayList<>();
+        String sql = "SELECT c.*, o.titulo AS obraTitulo FROM copia c LEFT JOIN obra o ON c.obraId = o.id "
+                + "WHERE c.obraId = ? AND c.status = 'DISPONIVEL' ORDER BY c.id";
+        try (Connection conn = DriverManager.getConnection(URL);
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, obraId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    Copia c = new Copia();
+                    c.setId(rs.getInt("id"));
+                    c.setCodigoBarras(rs.getString("codigoBarras"));
+                    c.setStatus(StatusCopia.DISPONIVEL);
+                    Obra obra = new Obra();
+                    obra.setId(rs.getInt("obraId"));
+                    obra.setTitulo(rs.getString("obraTitulo"));
+                    c.setObra(obra);
+                    lista.add(c);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Erro ao listar cópias disponíveis por obra: " + e.getMessage());
+        }
+        return lista;
+    }
+
+    // ── Listagem de Obras que possuem pelo menos 1 cópia DISPONÍVEL ──
+    public List<Obra> listarObrasComCopiasDisponiveis() {
+        List<Obra> resultado = new ArrayList<>();
+        List<Obra> todas = listarObras();
+        for (Obra o : todas) {
+            List<Copia> disponiveis = listarCopiasDisponiveisPorObra(o.getId());
+            if (!disponiveis.isEmpty()) {
+                o.setCopias(disponiveis);
+                resultado.add(o);
+            }
+        }
+        return resultado;
+    }
+
+    // ── Buscar primeira Cópia RESERVADA de uma Obra (para liberação ao concluir/cancelar reserva) ──
+    public Copia buscarCopiaReservadaPorObra(int obraId) {
+        String sql = "SELECT c.*, o.titulo AS obraTitulo FROM copia c LEFT JOIN obra o ON c.obraId = o.id "
+                + "WHERE c.obraId = ? AND c.status = 'RESERVADA' ORDER BY c.id LIMIT 1";
+        try (Connection conn = DriverManager.getConnection(URL);
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, obraId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    Copia c = new Copia();
+                    c.setId(rs.getInt("id"));
+                    c.setCodigoBarras(rs.getString("codigoBarras"));
+                    c.setStatus(StatusCopia.RESERVADA);
+                    Obra obra = new Obra();
+                    obra.setId(rs.getInt("obraId"));
+                    obra.setTitulo(rs.getString("obraTitulo"));
+                    c.setObra(obra);
+                    return c;
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Erro ao buscar cópia reservada por obra: " + e.getMessage());
+        }
+        return null;
     }
 
     // ── Wrappers de delegação para os DAOs ──

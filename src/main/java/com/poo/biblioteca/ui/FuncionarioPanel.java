@@ -93,35 +93,43 @@ public class FuncionarioPanel extends JPanel {
         lblFormTitulo.setFont(FONT_SUBTITLE);
         lblFormTitulo.setForeground(TEXT_PRIMARY);
 
+        JLabel lblObrigatorio = new JLabel("<html><font color='#C62828'>*</font> Campos obrigatórios</html>");
+        lblObrigatorio.setFont(FONT_SMALL);
+        lblObrigatorio.setForeground(TEXT_SECONDARY);
+
         txtId = UIHelper.createTextField("");
         txtId.setEditable(false);
         txtId.setBackground(BG_MAIN);
 
         txtNome = UIHelper.createTextField("Nome do colaborador");
         txtCpf = UIHelper.createTextField("000.000.000-00");
+        UIHelper.aplicarMascaraCpf(txtCpf);
         txtCargo = UIHelper.createTextField("Ex: Bibliotecário-Chefe");
         txtLogin = UIHelper.createTextField("usuario.login");
         txtSenha = UIHelper.createPasswordField("");
         txtEmail = UIHelper.createTextField("colaborador@biblioteca.org");
         txtTelefone = UIHelper.createTextField("(00) 00000-0000");
+        UIHelper.aplicarMascaraTelefone(txtTelefone);
 
         lblHashAtual = new JLabel("Nota: Deixe a senha em branco na edição para manter a atual.");
         lblHashAtual.setFont(FONT_SMALL);
         lblHashAtual.setForeground(ACCENT);
 
         pnlCard.add(lblFormTitulo);
-        pnlCard.add(Box.createVerticalStrut(14));
+        pnlCard.add(Box.createVerticalStrut(4));
+        pnlCard.add(lblObrigatorio);
+        pnlCard.add(Box.createVerticalStrut(12));
         pnlCard.add(UIHelper.createFormRow("Código (ID):", txtId));
         pnlCard.add(Box.createVerticalStrut(8));
-        pnlCard.add(UIHelper.createFormRow("Nome Completo:", txtNome));
+        pnlCard.add(UIHelper.createFormRow("Nome Completo:", txtNome, true));
         pnlCard.add(Box.createVerticalStrut(8));
-        pnlCard.add(UIHelper.createFormRow("CPF:", txtCpf));
+        pnlCard.add(UIHelper.createFormRow("CPF:", txtCpf, true));
         pnlCard.add(Box.createVerticalStrut(8));
         pnlCard.add(UIHelper.createFormRow("Cargo:", txtCargo));
         pnlCard.add(Box.createVerticalStrut(8));
-        pnlCard.add(UIHelper.createFormRow("Login de Acesso:", txtLogin));
+        pnlCard.add(UIHelper.createFormRow("Login de Acesso:", txtLogin, true));
         pnlCard.add(Box.createVerticalStrut(8));
-        pnlCard.add(UIHelper.createFormRow("Senha:", txtSenha));
+        pnlCard.add(UIHelper.createFormRow("Senha:", txtSenha, true));
         pnlCard.add(Box.createVerticalStrut(4));
         pnlCard.add(lblHashAtual);
         pnlCard.add(Box.createVerticalStrut(8));
@@ -155,6 +163,10 @@ public class FuncionarioPanel extends JPanel {
         add(splitPane, BorderLayout.CENTER);
     }
 
+    public void recarregarDados() {
+        carregarTabela();
+    }
+
     private void carregarTabela() {
         tableModel.setRowCount(0);
         try {
@@ -164,11 +176,11 @@ public class FuncionarioPanel extends JPanel {
                         f.getId(),
                         f.getIdentificadorFormatado(),
                         f.getNome(),
-                        f.getCpf(),
+                        UIHelper.formatarCpf(f.getCpf()),
                         f.getCargo(),
                         f.getLogin(),
                         f.getEmail(),
-                        f.getTelefone()
+                        UIHelper.formatarTelefone(f.getTelefone())
                 });
             }
         } catch (Exception ex) {
@@ -183,12 +195,12 @@ public class FuncionarioPanel extends JPanel {
             Funcionario f = service.getFuncionarioDAO().carregar(id);
             if (f != null && f.getId() > 0) {
                 txtId.setText(String.valueOf(f.getId()));
-                txtNome.setText(f.getNome());
-                txtCpf.setText(f.getCpf());
-                txtCargo.setText(f.getCargo());
-                txtLogin.setText(f.getLogin());
-                txtEmail.setText(f.getEmail());
-                txtTelefone.setText(f.getTelefone());
+                txtNome.setText(f.getNome() != null ? f.getNome() : "");
+                txtCpf.setText(UIHelper.formatarCpf(f.getCpf()));
+                txtCargo.setText(f.getCargo() != null ? f.getCargo() : "");
+                txtLogin.setText(f.getLogin() != null ? f.getLogin() : "");
+                txtEmail.setText(f.getEmail() != null ? f.getEmail() : "");
+                txtTelefone.setText(UIHelper.formatarTelefone(f.getTelefone()));
                 txtSenha.setText("");
                 hashSenhaExistente = f.getSenha();
                 lblHashAtual.setText("Senha criptografada no banco (SHA-256). Preencha apenas para alterar.");
@@ -219,10 +231,26 @@ public class FuncionarioPanel extends JPanel {
         String email = txtEmail.getText().trim();
         String telefone = txtTelefone.getText().trim();
 
-        if (nome.isEmpty() || cpf.isEmpty() || login.isEmpty()) {
-            UIHelper.showWarning(this, "Nome, CPF e Login são campos obrigatórios.");
+        String cpfDigitos = UIHelper.apenasDigitos(cpf);
+        String telDigitos = UIHelper.apenasDigitos(telefone);
+
+        if (nome.isEmpty() || cpfDigitos.isEmpty() || login.isEmpty()) {
+            UIHelper.showWarning(this, "Os campos obrigatórios (*) 'Nome Completo', 'CPF' e 'Login de Acesso' devem ser preenchidos.");
             return;
         }
+
+        if (cpfDigitos.length() != 11) {
+            UIHelper.showWarning(this, "Informe um CPF válido contendo 11 dígitos.");
+            return;
+        }
+
+        if (!telDigitos.isEmpty() && telDigitos.length() < 10) {
+            UIHelper.showWarning(this, "Informe um telefone válido com DDD (10 ou 11 dígitos) ou deixe o campo vazio.");
+            return;
+        }
+
+        cpf = UIHelper.formatarCpf(cpfDigitos);
+        telefone = telDigitos.isEmpty() ? "" : UIHelper.formatarTelefone(telDigitos);
 
         boolean isEdicao = !txtId.getText().isBlank();
 

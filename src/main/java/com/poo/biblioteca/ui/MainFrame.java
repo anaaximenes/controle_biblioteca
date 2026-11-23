@@ -25,7 +25,8 @@ public class MainFrame extends JFrame {
     private JPanel pnlContent;
     private CardLayout cardLayout;
     private final Map<String, JPanel> navButtons = new LinkedHashMap<>();
-    private String selectedKey = "OBRAS";
+    private final Map<String, Runnable> refreshActions = new LinkedHashMap<>();
+    private String selectedKey = "EMPRESTIMOS";
 
     public MainFrame(Funcionario funcionarioLogado, BibliotecaService service) {
         this.funcionarioLogado = funcionarioLogado;
@@ -53,25 +54,32 @@ public class MainFrame extends JFrame {
         pnlContent.setBackground(BG_MAIN);
 
         // Criação e registro das telas
+        EmprestimoPanel emprestimoPanel = new EmprestimoPanel(service, funcionarioLogado);
+        ReservaPanel reservaPanel = new ReservaPanel(service);
+        LeitorPanel leitorPanel = new LeitorPanel(service);
         ObraPanel obraPanel = new ObraPanel(service);
         CopiaPanel copiaPanel = new CopiaPanel(service);
-        LeitorPanel leitorPanel = new LeitorPanel(service);
         FuncionarioPanel funcionarioPanel = new FuncionarioPanel(service);
-        ReservaPanel reservaPanel = new ReservaPanel(service);
-        EmprestimoPanel emprestimoPanel = new EmprestimoPanel(service, funcionarioLogado);
 
+        pnlContent.add(emprestimoPanel, "EMPRESTIMOS");
+        pnlContent.add(reservaPanel, "RESERVAS");
+        pnlContent.add(leitorPanel, "LEITORES");
         pnlContent.add(obraPanel, "OBRAS");
         pnlContent.add(copiaPanel, "COPIAS");
-        pnlContent.add(leitorPanel, "LEITORES");
         pnlContent.add(funcionarioPanel, "FUNCIONARIOS");
-        pnlContent.add(reservaPanel, "RESERVAS");
-        pnlContent.add(emprestimoPanel, "EMPRESTIMOS");
+
+        refreshActions.put("EMPRESTIMOS", emprestimoPanel::recarregarDados);
+        refreshActions.put("RESERVAS", reservaPanel::recarregarDados);
+        refreshActions.put("LEITORES", leitorPanel::recarregarDados);
+        refreshActions.put("OBRAS", obraPanel::recarregarDados);
+        refreshActions.put("COPIAS", copiaPanel::recarregarDados);
+        refreshActions.put("FUNCIONARIOS", funcionarioPanel::recarregarDados);
 
         root.add(pnlContent, BorderLayout.CENTER);
         setContentPane(root);
 
         // Seleção inicial
-        selectNav("OBRAS");
+        selectNav("EMPRESTIMOS");
     }
 
     private JPanel createSidebar() {
@@ -116,12 +124,12 @@ public class MainFrame extends JFrame {
         menuPanel.setOpaque(false);
         menuPanel.setBorder(new EmptyBorder(10, 8, 10, 8));
 
-        addNavItem(menuPanel, "OBRAS", "📖  Obras do Acervo");
-        addNavItem(menuPanel, "COPIAS", "📄  Exemplares & Cópias");
-        addNavItem(menuPanel, "LEITORES", "👤  Leitores");
-        addNavItem(menuPanel, "FUNCIONARIOS", "👨‍💼  Funcionários");
+        addNavItem(menuPanel, "EMPRESTIMOS", "📦  Empréstimos e Multas");
         addNavItem(menuPanel, "RESERVAS", "📋  Reservas");
-        addNavItem(menuPanel, "EMPRESTIMOS", "📦  Circulação & Multas");
+        addNavItem(menuPanel, "LEITORES", "👤  Leitores");
+        addNavItem(menuPanel, "OBRAS", "📖  Obras do Acervo");
+        addNavItem(menuPanel, "COPIAS", "📄  Cópias");
+        addNavItem(menuPanel, "FUNCIONARIOS", "👨‍💼  Funcionários");
 
         menuPanel.add(Box.createVerticalGlue());
         sidebar.add(menuPanel, BorderLayout.CENTER);
@@ -191,6 +199,10 @@ public class MainFrame extends JFrame {
 
     private void selectNav(String key) {
         selectedKey = key;
+        Runnable refresh = refreshActions.get(key);
+        if (refresh != null) {
+            refresh.run();
+        }
         cardLayout.show(pnlContent, key);
 
         for (Map.Entry<String, JPanel> entry : navButtons.entrySet()) {
