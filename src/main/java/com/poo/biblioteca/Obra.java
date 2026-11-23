@@ -17,7 +17,7 @@ public class Obra {
         this.titulo = titulo;
         this.autor = autor;
         this.anoPublicacao = anoPublicacao;
-        this.copias = copias;
+        this.copias = new ArrayList<>();
     }
 
     public int getId() {

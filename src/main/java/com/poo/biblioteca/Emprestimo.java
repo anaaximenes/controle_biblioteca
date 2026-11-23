@@ -118,7 +118,7 @@ public class Emprestimo {
         this.calcularMulta();
 
         if (this.copia != null){
-            this.copia.setStatus("DISPONIVEL");
+            this.copia.setStatus(StatusCopia.DISPONIVEL);
         }
     }
 }

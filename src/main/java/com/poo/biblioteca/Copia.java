@@ -3,14 +3,13 @@ package com.poo.biblioteca;
 public class Copia {
     private int id;
     private String codigoBarras;
-    private String status;
+    private StatusCopia status;
     private Obra obra;
 
     public Copia() {
     }
 
-    public Copia(int id, String codigoBarras, String status, Obra obra) {
-        this.id = id;
+    public Copia(String codigoBarras, StatusCopia status, Obra obra) {
         this.codigoBarras = codigoBarras;
         this.status = status;
         this.obra = obra;
@@ -32,11 +31,11 @@ public class Copia {
         this.codigoBarras = codigoBarras;
     }
 
-    public String getStatus() {
+    public StatusCopia getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(StatusCopia status) {
         this.status = status;
     }
 
@@ -49,11 +48,6 @@ public class Copia {
     }
 
     public boolean isDisponivel() {
-        if (status.equals("DISPONIVEL")){
-            return true;
-        }
-        else {
-            return false;
-        }
+        return this.status == StatusCopia.DISPONIVEL;
     }
 }
