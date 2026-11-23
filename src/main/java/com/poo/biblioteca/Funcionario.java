@@ -1,5 +1,8 @@
 package com.poo.biblioteca;
 
+import com.poo.biblioteca.exception.SenhaInvalidaException;
+import com.poo.biblioteca.util.SegurancaUtil;
+
 public class Funcionario extends Pessoa {
 
     private String cargo;
@@ -31,30 +34,38 @@ public class Funcionario extends Pessoa {
     }
 
     public void setSenha(String senha) {
-        this.senha = senha;
+        String hash = SegurancaUtil.gerarHash(senha);
+        this.senha = hash;
+    }
+
+    public void setSenhaHash(String senhaHash){ //para utilizar na classe DAO para nao criptografar novamente
+        this.senha = senhaHash;
     }
 
     public boolean autenticar(String senha) {
-        //todo
-        return false;
+        if (senha == null || senha.isBlank() || this.senha == null) {
+            throw new SenhaInvalidaException("Senha inválida!");
+        }
+
+        if (!SegurancaUtil.gerarHash(senha).equals(this.senha)){
+            throw new SenhaInvalidaException("Senha invalida!");
+        }
+        return true;
     }
 
     @Override
     public int getPrazoEmprestimoDias() {
-        //todo
-        return 0;
+        return 20;
     }
 
     @Override
     public int getLimiteLivros() {
-        //todo
-        return 0;
+        return 5;
     }
 
     @Override
     public String getIdentificadorFormatado() {
-        //todo
-        return null;
+        return String.format("FUNC-%04d", this.getId());
     }
 }
 

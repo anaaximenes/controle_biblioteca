@@ -1,6 +1,10 @@
 package com.poo.biblioteca;
 
+import com.poo.biblioteca.exception.ReservaInvalidaException;
+
 import java.time.LocalDate;
+
+import static com.poo.biblioteca.StatusReserva.*;
 
 public class Reserva {
     private int id;
@@ -58,11 +62,34 @@ public class Reserva {
         this.status = status;
     }
 
+    public Reserva(Leitor leitor, Obra obra, LocalDate dataReserva) {
+        this.leitor = leitor;
+        this.obra = obra;
+        this.dataReserva = dataReserva;
+        this.dataExpiracao = dataReserva.plusDays(3);
+        this.status = ATIVA;
+    }
+
+    public Reserva() {
+    }
+
     public void cancelar(){
-        //todo
+        if (this.status != ATIVA){
+            throw new ReservaInvalidaException("Reserva já cancelada ou concluida!");
+        }
+        this.status = CANCELADA;
     }
 
     public void concluir(){
-        //todo
+        if (this.status != ATIVA){
+            throw new ReservaInvalidaException("Reserva já cancelada ou concluida!");
+        }
+        if (LocalDate.now().isAfter(this.dataExpiracao)){
+            this.status = EXPIRADA;
+            throw new ReservaInvalidaException("Reserva expirada!");
+        }
+        else {
+            this.status = CONCLUIDA;
+        }
     }
 }

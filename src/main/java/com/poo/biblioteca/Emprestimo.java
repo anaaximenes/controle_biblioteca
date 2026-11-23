@@ -1,6 +1,9 @@
 package com.poo.biblioteca;
 
+import com.poo.biblioteca.exception.DataDevolucaoInvalidaException;
+
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 
 public class Emprestimo {
     private int id;
@@ -77,11 +80,45 @@ public class Emprestimo {
     }
 
     public double calcularMulta(){
-        //todo
-        return 0;
+        if (dataDevolucaoReal == null){
+            throw new DataDevolucaoInvalidaException("A data de devolução real não pode ser nula!");
+        }
+        if (dataDevolucaoReal.isAfter(dataPrevistaDevolucao)){
+            long diasAtraso = ChronoUnit.DAYS.between(dataPrevistaDevolucao, dataDevolucaoReal);
+            if (diasAtraso < 30){
+                valorMulta = diasAtraso * 0.5;
+            }
+            else if (diasAtraso < 60){
+                valorMulta = ((diasAtraso - 30) * 0.25) + 15;
+            }
+            else {
+                valorMulta = 22.5;
+            }
+        }
+        else{
+            valorMulta = 0;
+        }
+        return valorMulta;
     }
 
-    public void finalizarDevolucao(){
-        //todo
+    public void finalizarDevolucao(LocalDate dataDevolucao){
+        if (dataDevolucaoReal != null){
+            throw new DataDevolucaoInvalidaException("Este empréstimo já foi finalizado anteriormente.");
+        }
+
+        if (dataDevolucao == null){
+            throw new DataDevolucaoInvalidaException("A data de devolução real não pode ser nula!");
+        }
+
+        if (dataDevolucao.isBefore(dataEmprestimo)){
+            throw new DataDevolucaoInvalidaException("A data de devolucao real não pode ser anterior a data do empréstimo!");
+        }
+
+        this.dataDevolucaoReal = dataDevolucao;
+        this.calcularMulta();
+
+        if (this.copia != null){
+            this.copia.setStatus("DISPONIVEL");
+        }
     }
 }

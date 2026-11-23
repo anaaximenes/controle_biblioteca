@@ -3,7 +3,7 @@ package com.poo.biblioteca;
 public class Copia {
     private int id;
     private String codigoBarras;
-    private String  status;
+    private String status;
     private Obra obra;
 
     public Copia() {
@@ -49,7 +49,11 @@ public class Copia {
     }
 
     public boolean isDisponivel() {
-        //todo
-        return false;
+        if (status.equals("DISPONIVEL")){
+            return true;
+        }
+        else {
+            return false;
+        }
     }
 }

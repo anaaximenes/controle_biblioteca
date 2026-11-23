@@ -27,19 +27,20 @@ public class Leitor extends Pessoa{
 
     @Override
     public int getPrazoEmprestimoDias() {
-        //todo
-        return 0;
+        return 15;
     }
 
     @Override
     public int getLimiteLivros() {
         //todo
-        return 0;
+        return 3;
     }
 
     @Override
     public String getIdentificadorFormatado() {
-        //todo
-        return null;
+        if (this.matricula == null || this.matricula.isBlank()) {
+            return "MAT-SEM-REGISTRO";
+        }
+        return "MAT-" + this.matricula.trim().toUpperCase();
     }
 }

@@ -1,5 +1,6 @@
 package com.poo.biblioteca;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Obra {
@@ -12,8 +13,7 @@ public class Obra {
     public Obra(){
     }
 
-    public Obra(int id, String titulo, String autor, int anoPublicacao, List<Copia> copias) {
-        this.id = id;
+    public Obra(String titulo, String autor, int anoPublicacao, List<Copia> copias) {
         this.titulo = titulo;
         this.autor = autor;
         this.anoPublicacao = anoPublicacao;
@@ -61,12 +61,20 @@ public class Obra {
     }
 
     public void adicionarCopia (Copia c){
-        //todo
+        if (c == null) {
+            throw new IllegalArgumentException("Copia nao pode ser nula!");
+        }
+        this.copias.add(c);
     }
 
     public List<Copia> getCopiasDisponiveis(){
-        //todo
-        return null;
+        List<Copia> disponiveis = new ArrayList<>();
+        for (Copia c : this.copias) {
+            if (c != null && c.isDisponivel()) {
+                disponiveis.add(c);
+            }
+        }
+        return disponiveis;
     }
 }
 
