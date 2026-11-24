@@ -54,18 +54,17 @@ public class ReservaPanel extends JPanel {
     private static class ObraItem {
         final int id;
         final String titulo;
-        final int copiasDisponiveis;
+        /*final int copiasDisponiveis;*/
 
-        ObraItem(int id, String titulo, int copiasDisponiveis) {
+        ObraItem(int id, String titulo/*, int copiasDisponiveis*/) {
             this.id = id;
             this.titulo = titulo;
-            this.copiasDisponiveis = copiasDisponiveis;
+            /*this.copiasDisponiveis = copiasDisponiveis;*/
         }
 
         @Override
         public String toString() {
-            String labelDisp = copiasDisponiveis == 1 ? "1 disponível" : copiasDisponiveis + " disponíveis";
-            return "[" + id + "] " + titulo + " (" + labelDisp + ")";
+            return "[" + id + "] " + titulo;
         }
     }
 
@@ -230,13 +229,10 @@ public class ReservaPanel extends JPanel {
                     cmbLeitor.addItem(new LeitorItem(l.getId(), l.getNome(), l.getMatricula()));
                 }
             }
-            // Exibe no ComboBox apenas obras que possuem ao menos uma cópia DISPONÍVEL
-            List<Obra> obrasDisponiveis = service.listarObrasComCopiasDisponiveis();
-            for (Obra o : obrasDisponiveis) {
-                int qtdDisponiveis = o.getCopiasDisponiveis().size();
-                if (qtdDisponiveis > 0) {
-                    cmbObra.addItem(new ObraItem(o.getId(), o.getTitulo(), qtdDisponiveis));
-                }
+
+            List<Obra> obras = service.listarObras();
+            for (Obra o : obras) {
+                cmbObra.addItem(new ObraItem(o.getId(), o.getTitulo()));
             }
         } catch (Exception ex) {
             UIHelper.showError(this, "Erro ao carregar leitores e obras: " + ex.getMessage());
@@ -315,17 +311,21 @@ public class ReservaPanel extends JPanel {
         }
 
         try {
-            // Valida disponibilidade de cópia antes de confirmar a reserva
-            List<Copia> copiasDisponiveis = service.listarCopiasDisponiveisPorObra(obraItem.id);
-            if (copiasDisponiveis.isEmpty()) {
-                UIHelper.showWarning(this, "Não há cópias disponíveis para a obra selecionada no momento.");
-                carregarCombos();
-                return;
+            // Valida se a obra já possui alguma reserva ATIVA
+            boolean possuiReservaAtiva = false;
+            for (Reserva r : service.listarReservas()) {
+                if (r.getObra() != null
+                        && r.getObra().getId() == obraItem.id
+                        && r.getStatus() == StatusReserva.ATIVA) {
+                    possuiReservaAtiva = true;
+                    break;
+                }
             }
 
-            Copia copiaParaReservar = copiasDisponiveis.get(0);
-            copiaParaReservar.setStatus(StatusCopia.RESERVADA);
-            service.getCopiaDAO().alterar(copiaParaReservar);
+            if (possuiReservaAtiva) {
+                UIHelper.showWarning(this, "Esta obra já possui uma reserva ATIVA no momento.");
+                return;
+            }
 
             Leitor leitor = new Leitor();
             leitor.setId(leitorItem.id);
@@ -343,7 +343,6 @@ public class ReservaPanel extends JPanel {
                     + "Código: #" + reserva.getId() + "\n"
                     + "Leitor: " + leitorItem.nome + "\n"
                     + "Obra: " + obraItem.titulo + "\n"
-                    + "Cópia reservada: " + copiaParaReservar.getCodigoBarras() + "\n"
                     + "Data de Expiração: " + UIHelper.formatarDataBR(reserva.getDataExpiracao()) + " (Prazo: 3 dias)");
 
             carregarCombos();
