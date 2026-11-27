@@ -19,11 +19,24 @@ public class ObraDAO {
         String sql = "CREATE TABLE IF NOT EXISTS obra (\n"
                 + " id integer PRIMARY KEY AUTOINCREMENT,\n"
                 + " titulo varchar(100) NOT NULL,\n"
-                + " autor varchar(100) NOT NULL, anoPublicacao integer"
+                + " autor varchar(100) NOT NULL, anoPublicacao integer,\n"
+                + " isbn varchar(20)"
                 + ");";
         try (Connection conn = DriverManager.getConnection(URL);
              Statement stmt = conn.createStatement()) {
             stmt.execute(sql);
+            boolean temColunaIsbn = false;
+            try (ResultSet rs = stmt.executeQuery("PRAGMA table_info(obra)")) {
+                while (rs.next()) {
+                    if ("isbn".equalsIgnoreCase(rs.getString("name"))) {
+                        temColunaIsbn = true;
+                        break;
+                    }
+                }
+            }
+            if (!temColunaIsbn) {
+                stmt.execute("ALTER TABLE obra ADD COLUMN isbn varchar(20)");
+            }
             System.out.println("Tabela 'Obra' criada ou já existente.");
         } catch (Exception e) {
             System.err.println("Erro ao criar tabela: " + e.getMessage());
@@ -31,12 +44,13 @@ public class ObraDAO {
     }
 
     public int inserir(Obra o) {
-        String sql = "INSERT INTO obra(titulo, autor, anoPublicacao) VALUES(?, ?, ?)";
+        String sql = "INSERT INTO obra(titulo, autor, anoPublicacao, isbn) VALUES(?, ?, ?, ?)";
         try (Connection conn = DriverManager.getConnection(URL);
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, o.getTitulo());
             pstmt.setString(2, o.getAutor());
             pstmt.setInt(3, o.getAnoPublicacao());
+            pstmt.setString(4, o.getIsbn());
 
             return pstmt.executeUpdate();
         } catch (Exception e) {
@@ -46,13 +60,14 @@ public class ObraDAO {
     }
 
     public int alterar(Obra o) {
-        String sql = "update obra set titulo=?, autor=?, anoPublicacao=? where id=?";
+        String sql = "update obra set titulo=?, autor=?, anoPublicacao=?, isbn=? where id=?";
         try (Connection conn = DriverManager.getConnection(URL);
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, o.getTitulo());
             pstmt.setString(2, o.getAutor());
             pstmt.setInt(3, o.getAnoPublicacao());
-            pstmt.setInt(4, o.getId());
+            pstmt.setString(4, o.getIsbn());
+            pstmt.setInt(5, o.getId());
             return pstmt.executeUpdate();
         } catch (Exception e) {
             System.err.println("Erro ao alterar obra: " + e.getMessage());
@@ -84,6 +99,7 @@ public class ObraDAO {
                 o.setTitulo(rs.getString("titulo"));
                 o.setAutor(rs.getString("autor"));
                 o.setAnoPublicacao(rs.getInt("anoPublicacao"));
+                o.setIsbn(rs.getString("isbn"));
             }
         } catch (Exception e) {
             System.err.println("Erro ao listar obra: " + e.getMessage());

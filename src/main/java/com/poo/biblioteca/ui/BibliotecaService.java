@@ -184,6 +184,7 @@ public class BibliotecaService {
                 o.setTitulo(rs.getString("titulo"));
                 o.setAutor(rs.getString("autor"));
                 o.setAnoPublicacao(rs.getInt("anoPublicacao"));
+                o.setIsbn(rs.getString("isbn"));
                 lista.add(o);
             }
         } catch (SQLException e) {
@@ -195,7 +196,7 @@ public class BibliotecaService {
     // ── Listagem de Cópias ──
     public List<Copia> listarCopias() {
         List<Copia> lista = new ArrayList<>();
-        String sql = "SELECT c.*, o.titulo AS obraTitulo FROM copia c LEFT JOIN obra o ON c.obraId = o.id ORDER BY c.id";
+        String sql = "SELECT c.*, o.titulo AS obraTitulo, o.isbn AS obraIsbn FROM copia c LEFT JOIN obra o ON c.obraId = o.id ORDER BY c.id";
         try (Connection conn = DriverManager.getConnection(URL);
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
@@ -210,6 +211,7 @@ public class BibliotecaService {
                 Obra obra = new Obra();
                 obra.setId(rs.getInt("obraId"));
                 obra.setTitulo(rs.getString("obraTitulo"));
+                obra.setIsbn(rs.getString("obraIsbn"));
                 c.setObra(obra);
                 lista.add(c);
             }
@@ -222,7 +224,7 @@ public class BibliotecaService {
     // ── Listagem de Cópias Disponíveis ──
     public List<Copia> listarCopiasDisponiveis() {
         List<Copia> lista = new ArrayList<>();
-        String sql = "SELECT c.*, o.titulo AS obraTitulo FROM copia c LEFT JOIN obra o ON c.obraId = o.id WHERE c.status = 'DISPONIVEL' ORDER BY c.id";
+        String sql = "SELECT c.*, o.titulo AS obraTitulo, o.isbn AS obraIsbn FROM copia c LEFT JOIN obra o ON c.obraId = o.id WHERE c.status = 'DISPONIVEL' ORDER BY c.id";
         try (Connection conn = DriverManager.getConnection(URL);
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
@@ -234,6 +236,7 @@ public class BibliotecaService {
                 Obra obra = new Obra();
                 obra.setId(rs.getInt("obraId"));
                 obra.setTitulo(rs.getString("obraTitulo"));
+                obra.setIsbn(rs.getString("obraIsbn"));
                 c.setObra(obra);
                 lista.add(c);
             }
@@ -246,7 +249,7 @@ public class BibliotecaService {
     // ── Listagem de Cópias Disponíveis por Obra ──
     public List<Copia> listarCopiasDisponiveisPorObra(int obraId) {
         List<Copia> lista = new ArrayList<>();
-        String sql = "SELECT c.*, o.titulo AS obraTitulo FROM copia c LEFT JOIN obra o ON c.obraId = o.id "
+        String sql = "SELECT c.*, o.titulo AS obraTitulo, o.isbn AS obraIsbn FROM copia c LEFT JOIN obra o ON c.obraId = o.id "
                 + "WHERE c.obraId = ? AND c.status = 'DISPONIVEL' ORDER BY c.id";
         try (Connection conn = DriverManager.getConnection(URL);
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -260,6 +263,7 @@ public class BibliotecaService {
                     Obra obra = new Obra();
                     obra.setId(rs.getInt("obraId"));
                     obra.setTitulo(rs.getString("obraTitulo"));
+                    obra.setIsbn(rs.getString("obraIsbn"));
                     c.setObra(obra);
                     lista.add(c);
                 }
@@ -286,7 +290,7 @@ public class BibliotecaService {
 
     // ── Buscar primeira Cópia RESERVADA de uma Obra (para liberação ao concluir/cancelar reserva) ──
     public Copia buscarCopiaReservadaPorObra(int obraId) {
-        String sql = "SELECT c.*, o.titulo AS obraTitulo FROM copia c LEFT JOIN obra o ON c.obraId = o.id "
+        String sql = "SELECT c.*, o.titulo AS obraTitulo, o.isbn AS obraIsbn FROM copia c LEFT JOIN obra o ON c.obraId = o.id "
                 + "WHERE c.obraId = ? AND c.status = 'RESERVADA' ORDER BY c.id LIMIT 1";
         try (Connection conn = DriverManager.getConnection(URL);
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -300,6 +304,7 @@ public class BibliotecaService {
                     Obra obra = new Obra();
                     obra.setId(rs.getInt("obraId"));
                     obra.setTitulo(rs.getString("obraTitulo"));
+                    obra.setIsbn(rs.getString("obraIsbn"));
                     c.setObra(obra);
                     return c;
                 }

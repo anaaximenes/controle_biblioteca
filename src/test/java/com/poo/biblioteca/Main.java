@@ -209,6 +209,7 @@ public class Main {
         obra.setTitulo("Engenharia de Software Moderna");
         obra.setAutor("Marco Tulio Valente");
         obra.setAnoPublicacao(2020);
+        obra.setIsbn("978-65-00-01950-6");
 
         /*
          * NOTA DE ATENCAO / LACUNA NO MODELO Obra:
@@ -231,7 +232,7 @@ public class Main {
         obra.adicionarCopia(c3);
         obra.adicionarCopia(c4);
 
-        System.out.println("[Obra] Titulo: " + obra.getTitulo() + " | Total de copias: " + obra.getCopias().size());
+        System.out.println("[Obra] Titulo: " + obra.getTitulo() + " | ISBN: " + obra.getIsbn() + " | Total de copias: " + obra.getCopias().size());
 
         // Validacao de rejeicao de copia nula
         try {
@@ -560,6 +561,7 @@ public class Main {
         obra.setTitulo("Clean Code");
         obra.setAutor("Robert C. Martin");
         obra.setAnoPublicacao(2008);
+        obra.setIsbn("978-0-13-235088-4");
 
         // Inserir
         int linhas = dao.inserir(obra);
@@ -571,10 +573,12 @@ public class Main {
         System.out.println("[ObraDAO] Carregada ID " + carregada.getId()
                 + " | Titulo: " + carregada.getTitulo()
                 + " | Autor: " + carregada.getAutor()
-                + " | Ano: " + carregada.getAnoPublicacao());
+                + " | Ano: " + carregada.getAnoPublicacao()
+                + " | ISBN: " + carregada.getIsbn());
 
         // Alterar
         carregada.setTitulo("Clean Code - Edicao Especial");
+        carregada.setIsbn("978-0-13-235088-5");
         System.out.println("[ObraDAO] Alterando obra...");
         int linhasAlteradas = dao.alterar(carregada);
         System.out.println("[ObraDAO] Alterar obra: " + (linhasAlteradas > 0 ? "SUCESSO" : "FALHA"));
@@ -600,6 +604,7 @@ public class Main {
         obraPai.setTitulo("Estruturas de Dados em Java");
         obraPai.setAutor("Goodrich");
         obraPai.setAnoPublicacao(2013);
+        obraPai.setIsbn("978-85-8260-018-4");
         obraDAO.inserir(obraPai);
 
         CopiaDAO copiaDAO = new CopiaDAO();
@@ -811,6 +816,7 @@ public class Main {
         obra.setTitulo("Algoritmos e Estruturas de Dados");
         obra.setAutor("Cormen et al.");
         obra.setAnoPublicacao(2022);
+        obra.setIsbn("978-85-352-3699-6");
         obra.setCopias(new ArrayList<>());
         obraDAO.inserir(obra);
 
