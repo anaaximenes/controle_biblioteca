@@ -23,6 +23,7 @@ public class ObraPanel extends JPanel {
     private JTextField txtTitulo;
     private JTextField txtAutor;
     private JTextField txtAno;
+    private JTextField txtIsbn;
 
     public ObraPanel(BibliotecaService service) {
         this.service = service;
@@ -53,7 +54,7 @@ public class ObraPanel extends JPanel {
         splitPane.setBorder(null);
 
         // Tabela
-        String[] colunas = {"ID", "Título da Obra", "Autor", "Ano de Publicação"};
+        String[] colunas = {"ID", "Título da Obra", "Autor", "Ano de Publicação", "ISBN"};
         tableModel = new DefaultTableModel(colunas, 0);
         tabela = UIHelper.createStyledTable(tableModel);
 
@@ -91,6 +92,7 @@ public class ObraPanel extends JPanel {
         txtTitulo = UIHelper.createTextField("Ex: Clean Code");
         txtAutor = UIHelper.createTextField("Ex: Robert C. Martin");
         txtAno = UIHelper.createTextField("Ex: 2008");
+        txtIsbn = UIHelper.createTextField("Ex: 978-0-13-235088-4");
 
         pnlCard.add(lblFormTitulo);
         pnlCard.add(Box.createVerticalStrut(14));
@@ -101,6 +103,8 @@ public class ObraPanel extends JPanel {
         pnlCard.add(UIHelper.createFormRow("Autor:", txtAutor));
         pnlCard.add(Box.createVerticalStrut(8));
         pnlCard.add(UIHelper.createFormRow("Ano de Publicação:", txtAno));
+        pnlCard.add(Box.createVerticalStrut(8));
+        pnlCard.add(UIHelper.createFormRow("ISBN:", txtIsbn));
         pnlCard.add(Box.createVerticalStrut(20));
 
         // Botões
@@ -141,7 +145,8 @@ public class ObraPanel extends JPanel {
                         o.getId(),
                         o.getTitulo(),
                         o.getAutor(),
-                        o.getAnoPublicacao()
+                        o.getAnoPublicacao(),
+                        o.getIsbn() != null ? o.getIsbn() : ""
                 });
             }
         } catch (Exception ex) {
@@ -159,6 +164,7 @@ public class ObraPanel extends JPanel {
                 txtTitulo.setText(o.getTitulo());
                 txtAutor.setText(o.getAutor());
                 txtAno.setText(String.valueOf(o.getAnoPublicacao()));
+                txtIsbn.setText(o.getIsbn() != null ? o.getIsbn() : "");
             }
         }
     }
@@ -169,15 +175,17 @@ public class ObraPanel extends JPanel {
         txtTitulo.setText("");
         txtAutor.setText("");
         txtAno.setText("");
+        txtIsbn.setText("");
     }
 
     private void salvarObra() {
         String titulo = txtTitulo.getText().trim();
         String autor = txtAutor.getText().trim();
         String anoStr = txtAno.getText().trim();
+        String isbn = txtIsbn.getText().trim();
 
-        if (titulo.isEmpty() || autor.isEmpty()) {
-            UIHelper.showWarning(this, "Título e Autor são campos obrigatórios.");
+        if (titulo.isEmpty() || autor.isEmpty() || isbn.isEmpty()) {
+            UIHelper.showWarning(this, "Título, Autor e ISBN são campos obrigatórios.");
             return;
         }
 
@@ -198,6 +206,7 @@ public class ObraPanel extends JPanel {
             obra.setTitulo(titulo);
             obra.setAutor(autor);
             obra.setAnoPublicacao(ano);
+            obra.setIsbn(isbn);
 
             boolean isEdicao = !txtId.getText().isBlank();
             if (isEdicao) {

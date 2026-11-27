@@ -8,15 +8,17 @@ public class Obra {
     private String titulo;
     private String autor;
     private int anoPublicacao;
+    private String isbn;
     private List<Copia> copias;
 
     public Obra(){
     }
 
-    public Obra(String titulo, String autor, int anoPublicacao, List<Copia> copias) {
+    public Obra(String titulo, String autor, int anoPublicacao, String isbn, List<Copia> copias) {
         this.titulo = titulo;
         this.autor = autor;
         this.anoPublicacao = anoPublicacao;
+        this.isbn = isbn;
         this.copias = new ArrayList<>();
     }
 
@@ -50,6 +52,14 @@ public class Obra {
 
     public void setAnoPublicacao(int anoPublicacao) {
         this.anoPublicacao = anoPublicacao;
+    }
+
+    public String getIsbn() {
+        return isbn;
+    }
+
+    public void setIsbn(String isbn) {
+        this.isbn = isbn;
     }
 
     public List<Copia> getCopias() {
