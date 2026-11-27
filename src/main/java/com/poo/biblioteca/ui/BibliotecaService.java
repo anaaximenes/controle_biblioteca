@@ -18,7 +18,7 @@ import java.util.List;
  */
 public class BibliotecaService {
 
-    private static final String URL = "jdbc:sqlite:exemplo.db";
+    private static final String URL = "jdbc:sqlite:BDBiblioteca.db";
 
     private final LeitorDAO leitorDAO;
     private final FuncionarioDAO funcionarioDAO;

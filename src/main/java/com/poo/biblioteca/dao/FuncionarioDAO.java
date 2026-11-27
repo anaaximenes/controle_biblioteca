@@ -9,7 +9,7 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 
 public class FuncionarioDAO {
-    private static final String URL = "jdbc:sqlite:exemplo.db";
+    private static final String URL = "jdbc:sqlite:BDBiblioteca.db";
 
     public FuncionarioDAO(){
         criarNovaTabela();

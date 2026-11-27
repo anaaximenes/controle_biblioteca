@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class EmprestimoDAO {
-    private static final String URL = "jdbc:sqlite:exemplo.db";
+    private static final String URL = "jdbc:sqlite:BDBiblioteca.db";
 
     public EmprestimoDAO() {
         criarNovaTabela();
