@@ -47,7 +47,7 @@ public class FuncionarioPanel extends JPanel {
         // Cabeçalho
         JPanel pnlHeader = new JPanel(new BorderLayout());
         pnlHeader.setOpaque(false);
-        JLabel lblTitulo = UIHelper.createTitleLabel("👨‍💼 Gestão de Funcionários");
+        JLabel lblTitulo = UIHelper.createTitleLabel("Gestão de Funcionários");
         JLabel lblSub = new JLabel("Controle de acessos, cargos e operadores do sistema");
         lblSub.setFont(FONT_SMALL);
         lblSub.setForeground(TEXT_SECONDARY);
@@ -76,7 +76,7 @@ public class FuncionarioPanel extends JPanel {
         pnlTabela.setOpaque(false);
         pnlTabela.add(UIHelper.wrapInScrollPane(tabela), BorderLayout.CENTER);
 
-        JButton btnRecarregar = UIHelper.createButton("🔄 Atualizar Lista", BTN_PRIMARY);
+        JButton btnRecarregar = UIHelper.createButton("Atualizar Lista", BTN_PRIMARY);
         btnRecarregar.addActionListener(e -> carregarTabela());
         JPanel pnlAcoesTab = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         pnlAcoesTab.setOpaque(false);

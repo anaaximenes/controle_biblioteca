@@ -90,10 +90,10 @@ public class LoginFrame extends JFrame {
         btnEntrar.setMaximumSize(new Dimension(Integer.MAX_VALUE, BUTTON_HEIGHT));
         btnEntrar.addActionListener(e -> executarLogin());
 
-        JLabel lblDica = new JLabel("Credenciais padrão: admin / admin123", SwingConstants.CENTER);
+        /*JLabel lblDica = new JLabel("Credenciais padrão: admin / admin123", SwingConstants.CENTER);
         lblDica.setFont(FONT_SMALL);
         lblDica.setForeground(TEXT_PLACEHOLDER);
-        lblDica.setAlignmentX(Component.CENTER_ALIGNMENT);
+        lblDica.setAlignmentX(Component.CENTER_ALIGNMENT);*/
 
         // Montagem do card
         card.add(lblIcon);
@@ -109,7 +109,7 @@ public class LoginFrame extends JFrame {
         card.add(Box.createVerticalStrut(18));
         card.add(btnEntrar);
         card.add(Box.createVerticalStrut(10));
-        card.add(lblDica);
+        /*card.add(lblDica);*/
 
         add(card);
     }

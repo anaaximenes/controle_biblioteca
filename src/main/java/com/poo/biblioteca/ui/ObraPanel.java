@@ -38,7 +38,7 @@ public class ObraPanel extends JPanel {
         // Cabeçalho
         JPanel pnlHeader = new JPanel(new BorderLayout());
         pnlHeader.setOpaque(false);
-        JLabel lblTitulo = UIHelper.createTitleLabel("📖 Catálogo de Obras");
+        JLabel lblTitulo = UIHelper.createTitleLabel("Catálogo de Obras");
         JLabel lblSub = new JLabel("Cadastro bibliográfico de livros, autores e publicações");
         lblSub.setFont(FONT_SMALL);
         lblSub.setForeground(TEXT_SECONDARY);
@@ -67,7 +67,7 @@ public class ObraPanel extends JPanel {
         pnlTabela.setOpaque(false);
         pnlTabela.add(UIHelper.wrapInScrollPane(tabela), BorderLayout.CENTER);
 
-        JButton btnRecarregar = UIHelper.createButton("🔄 Atualizar Lista", BTN_PRIMARY);
+        JButton btnRecarregar = UIHelper.createButton("Atualizar Lista", BTN_PRIMARY);
         btnRecarregar.addActionListener(e -> carregarTabela());
         JPanel pnlAcoesTab = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         pnlAcoesTab.setOpaque(false);

@@ -43,7 +43,7 @@ public class BibliotecaApp {
                 admin.setTelefone("(11) 99999-0000");
                 admin.setCargo("Bibliotecário-Chefe");
                 admin.setLogin("admin");
-                admin.setSenha("admin123"); // Criptografa internamente via SegurancaUtil
+                admin.setSenha("admin"); // Criptografa internamente via SegurancaUtil
 
                 service.getFuncionarioDAO().inserir(admin);
                 System.out.println("[Sistema] Usuário inicial criado com sucesso: Login 'admin' | Senha 'admin123'");

@@ -96,7 +96,7 @@ public class EmprestimoPanel extends JPanel {
         // Cabeçalho
         JPanel pnlHeader = new JPanel(new BorderLayout());
         pnlHeader.setOpaque(false);
-        JLabel lblTitulo = UIHelper.createTitleLabel("📦 Empréstimos e Multas");
+        JLabel lblTitulo = UIHelper.createTitleLabel("Empréstimos e Multas");
         String nomeOperador = (funcionarioLogado != null) ? funcionarioLogado.getNome() : "Administrador";
         JLabel lblSub = new JLabel("Operador responsável: " + nomeOperador + " | Registro de retiradas, entregas e multas");
         lblSub.setFont(FONT_SMALL);
@@ -173,7 +173,7 @@ public class EmprestimoPanel extends JPanel {
         lblPrazoInfo.setFont(FONT_SMALL);
         lblPrazoInfo.setForeground(ACCENT);
 
-        JButton btnEmprestar = UIHelper.createSuccessButton("✔ Confirmar Empréstimo");
+        JButton btnEmprestar = UIHelper.createSuccessButton("Confirmar Empréstimo");
         btnEmprestar.setMaximumSize(new Dimension(Integer.MAX_VALUE, BUTTON_HEIGHT));
         btnEmprestar.addActionListener(e -> realizarEmprestimo());
 
@@ -321,7 +321,7 @@ public class EmprestimoPanel extends JPanel {
                 } catch (Exception ignored) {}
 
                 boolean isAberto = (emp.getDataDevolucaoReal() == null);
-                String situacao = isAberto ? "⏳ EM ABERTO" : "✔ DEVOLVIDO";
+                String situacao = isAberto ? "EM ABERTO" : "DEVOLVIDO";
                 String dataDevReal = isAberto ? "Pendente" : UIHelper.formatarDataBR(emp.getDataDevolucaoReal());
                 String multaFormatada = String.format("R$ %.2f", emp.getValorMulta());
 

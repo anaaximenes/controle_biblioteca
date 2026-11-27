@@ -94,7 +94,7 @@ public class MainFrame extends JFrame {
         topPanel.setOpaque(false);
         topPanel.setBorder(new EmptyBorder(22, 18, 22, 18));
 
-        JLabel lblLogo = new JLabel("📚 BIBLIOTECA");
+        JLabel lblLogo = new JLabel("BIBLIOTECA");
         lblLogo.setFont(FONT_SIDEBAR_TITLE);
         lblLogo.setForeground(Color.WHITE);
 
@@ -124,12 +124,12 @@ public class MainFrame extends JFrame {
         menuPanel.setOpaque(false);
         menuPanel.setBorder(new EmptyBorder(10, 8, 10, 8));
 
-        addNavItem(menuPanel, "EMPRESTIMOS", "📦  Empréstimos e Multas");
-        addNavItem(menuPanel, "RESERVAS", "📋  Reservas");
-        addNavItem(menuPanel, "LEITORES", "👤  Leitores");
-        addNavItem(menuPanel, "OBRAS", "📖  Obras do Acervo");
-        addNavItem(menuPanel, "COPIAS", "📄  Cópias");
-        addNavItem(menuPanel, "FUNCIONARIOS", "👨‍💼  Funcionários");
+        addNavItem(menuPanel, "EMPRESTIMOS", "Empréstimos e Multas");
+        addNavItem(menuPanel, "RESERVAS", "Reservas");
+        addNavItem(menuPanel, "LEITORES", "Leitores");
+        addNavItem(menuPanel, "OBRAS", "Obras do Acervo");
+        addNavItem(menuPanel, "COPIAS", "Cópias");
+        addNavItem(menuPanel, "FUNCIONARIOS", "Funcionários");
 
         menuPanel.add(Box.createVerticalGlue());
         sidebar.add(menuPanel, BorderLayout.CENTER);
@@ -139,7 +139,7 @@ public class MainFrame extends JFrame {
         bottomPanel.setOpaque(false);
         bottomPanel.setBorder(new EmptyBorder(14, 14, 18, 14));
 
-        JButton btnSair = new JButton("🚪 Encerrar Sessão");
+        JButton btnSair = new JButton("Encerrar Sessão");
         btnSair.setFont(FONT_BUTTON);
         btnSair.setForeground(new Color(0xEF, 0x9A, 0x9A));
         btnSair.setBackground(new Color(0x4E, 0x34, 0x2E));

@@ -60,7 +60,7 @@ public class CopiaPanel extends JPanel {
         // Cabeçalho
         JPanel pnlHeader = new JPanel(new BorderLayout());
         pnlHeader.setOpaque(false);
-        JLabel lblTitulo = UIHelper.createTitleLabel("📄 Cópias");
+        JLabel lblTitulo = UIHelper.createTitleLabel("Cópias");
         JLabel lblSub = new JLabel("Controle de exemplares, código de barras e disponibilidade");
         lblSub.setFont(FONT_SMALL);
         lblSub.setForeground(TEXT_SECONDARY);
@@ -94,13 +94,13 @@ public class CopiaPanel extends JPanel {
                         c.setText("● DISPONÍVEL");
                     } else if (st.equals(StatusCopia.EMPRESTADA.name())) {
                         c.setForeground(STATUS_EMPRESTADA);
-                        c.setText("● EMPRESTADA");
+                        c.setText("EMPRESTADA");
                     } else if (st.equals(StatusCopia.RESERVADA.name())) {
                         c.setForeground(STATUS_RESERVADA);
-                        c.setText("● RESERVADA");
+                        c.setText("RESERVADA");
                     } else {
                         c.setForeground(STATUS_MANUTENCAO);
-                        c.setText("● MANUTENÇÃO");
+                        c.setText("MANUTENÇÃO");
                     }
                 }
                 return c;
@@ -117,7 +117,7 @@ public class CopiaPanel extends JPanel {
         pnlTabela.setOpaque(false);
         pnlTabela.add(UIHelper.wrapInScrollPane(tabela), BorderLayout.CENTER);
 
-        JButton btnRecarregar = UIHelper.createButton("🔄 Atualizar Lista", BTN_PRIMARY);
+        JButton btnRecarregar = UIHelper.createButton("Atualizar Lista", BTN_PRIMARY);
         btnRecarregar.addActionListener(e -> {
             carregarComboObras();
             carregarTabela();

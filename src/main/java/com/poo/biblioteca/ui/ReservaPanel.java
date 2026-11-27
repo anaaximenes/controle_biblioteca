@@ -83,7 +83,7 @@ public class ReservaPanel extends JPanel {
         // Cabeçalho
         JPanel pnlHeader = new JPanel(new BorderLayout());
         pnlHeader.setOpaque(false);
-        JLabel lblTitulo = UIHelper.createTitleLabel("📋 Máquina de Estados de Reservas");
+        JLabel lblTitulo = UIHelper.createTitleLabel("Máquina de Estados de Reservas");
         JLabel lblSub = new JLabel("Acompanhamento de filas de espera, prazos de 3 dias e efetivações");
         lblSub.setFont(FONT_SMALL);
         lblSub.setForeground(TEXT_SECONDARY);
@@ -115,13 +115,13 @@ public class ReservaPanel extends JPanel {
                         c.setText("● ATIVA (Aguardando)");
                     } else if (st.equals(StatusReserva.CONCLUIDA.name())) {
                         c.setForeground(STATUS_DISPONIVEL);
-                        c.setText("✔ CONCLUÍDA");
+                        c.setText("CONCLUÍDA");
                     } else if (st.equals(StatusReserva.CANCELADA.name())) {
                         c.setForeground(BTN_DANGER);
-                        c.setText("✖ CANCELADA");
+                        c.setText("CANCELADA");
                     } else if (st.equals(StatusReserva.EXPIRADA.name())) {
                         c.setForeground(STATUS_EMPRESTADA);
-                        c.setText("⚠ EXPIRADA");
+                        c.setText("EXPIRADA");
                     }
                 }
                 return c;
@@ -159,7 +159,7 @@ public class ReservaPanel extends JPanel {
         cmbObra.setBackground(BG_INPUT);
         cmbObra.setForeground(TEXT_PRIMARY);
 
-        JButton btnCriar = UIHelper.createSuccessButton("✔ Confirmar Reserva (+3 dias)");
+        JButton btnCriar = UIHelper.createSuccessButton("Confirmar Reserva (+3 dias)");
         btnCriar.setMaximumSize(new Dimension(Integer.MAX_VALUE, BUTTON_HEIGHT));
         btnCriar.addActionListener(e -> criarNovaReserva());
 

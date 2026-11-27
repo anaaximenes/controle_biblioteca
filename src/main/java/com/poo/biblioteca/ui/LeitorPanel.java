@@ -43,7 +43,7 @@ public class LeitorPanel extends JPanel {
         // Cabeçalho
         JPanel pnlHeader = new JPanel(new BorderLayout());
         pnlHeader.setOpaque(false);
-        JLabel lblTitulo = UIHelper.createTitleLabel("👤 Gestão de Leitores");
+        JLabel lblTitulo = UIHelper.createTitleLabel("Gestão de Leitores");
         JLabel lblSub = new JLabel("Cadastro de associados, matrículas e prazos de circulação");
         lblSub.setFont(FONT_SMALL);
         lblSub.setForeground(TEXT_SECONDARY);
@@ -72,7 +72,7 @@ public class LeitorPanel extends JPanel {
         pnlTabela.setOpaque(false);
         pnlTabela.add(UIHelper.wrapInScrollPane(tabela), BorderLayout.CENTER);
 
-        JButton btnRecarregar = UIHelper.createButton("🔄 Atualizar Lista", BTN_PRIMARY);
+        JButton btnRecarregar = UIHelper.createButton("Atualizar Lista", BTN_PRIMARY);
         btnRecarregar.addActionListener(e -> carregarTabela());
         JPanel pnlAcoesTab = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         pnlAcoesTab.setOpaque(false);
@@ -97,10 +97,10 @@ public class LeitorPanel extends JPanel {
         txtId.setEditable(false);
         txtId.setBackground(BG_MAIN);
 
-        txtNome = UIHelper.createTextField("Ex: Ana Beatriz Silva");
+        txtNome = UIHelper.createTextField("Ex: Fulano da Silva");
         txtCpf = UIHelper.createTextField("000.000.000-00");
         UIHelper.aplicarMascaraCpf(txtCpf);
-        txtEmail = UIHelper.createTextField("exemplo@email.com");
+        txtEmail = UIHelper.createTextField("fulano.silva@email.com");
         txtTelefone = UIHelper.createTextField("(00) 00000-0000");
         UIHelper.aplicarMascaraTelefone(txtTelefone);
         txtMatricula = UIHelper.createTextField("2026-A01");
